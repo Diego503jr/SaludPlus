@@ -134,52 +134,49 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Citas.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Consultas.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DetalleReceta.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Especialidades.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Medicamentos.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Medicos.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Pacientes.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Models\Pruebas.Context.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Pruebas.Context.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Models\Pruebas.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Pruebas.tt</DependentUpon>
-    </Compile>
-    <Compile Include="Models\Pruebas.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Pruebas.edmx</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Recetas.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Roles.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\sysdiagrams.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+    <Compile Include="Models\SaludPlusModel.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SaludPlusModel.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SaludPlusModel.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SaludPlusModel.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SaludPlusModel.edmx</DependentUpon>
     </Compile>
     <Compile Include="Models\Usuarios.cs">
-      <DependentUpon>Pruebas.tt</DependentUpon>
+      <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -200,18 +197,20 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\img\SaludPlusLogo.png" />
+    <Content Include="Content\Layout.css" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
-    <Content Include="Models\Pruebas.Context.tt">
+    <Content Include="Models\SaludPlusModel.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>Pruebas.edmx</DependentUpon>
-      <LastGenOutput>Pruebas.Context.cs</LastGenOutput>
+      <DependentUpon>SaludPlusModel.edmx</DependentUpon>
+      <LastGenOutput>SaludPlusModel.Context.cs</LastGenOutput>
     </Content>
-    <Content Include="Models\Pruebas.tt">
+    <Content Include="Models\SaludPlusModel.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>Pruebas.edmx</DependentUpon>
-      <LastGenOutput>Pruebas.cs</LastGenOutput>
+      <DependentUpon>SaludPlusModel.edmx</DependentUpon>
+      <LastGenOutput>SaludPlusModel.cs</LastGenOutput>
     </Content>
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
@@ -219,12 +218,12 @@
     <Content Include="Scripts\bootstrap.esm.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <EntityDeploy Include="Models\Pruebas.edmx">
+    <EntityDeploy Include="Models\SaludPlusModel.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
-      <LastGenOutput>Pruebas.Designer.cs</LastGenOutput>
+      <LastGenOutput>SaludPlusModel.Designer.cs</LastGenOutput>
     </EntityDeploy>
-    <Content Include="Models\Pruebas.edmx.diagram">
-      <DependentUpon>Pruebas.edmx</DependentUpon>
+    <Content Include="Models\SaludPlusModel.edmx.diagram">
+      <DependentUpon>SaludPlusModel.edmx</DependentUpon>
     </Content>
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
@@ -251,6 +250,9 @@
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Shared\_Navbar.cshtml" />
+    <Content Include="Views\Shared\_Sidebar.cshtml" />
+    <Content Include="Views\Shared\_Footer.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -1,0 +1,422 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="SaludPlussModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+  <EntityType Name="Citas">
+    <Key>
+      <PropertyRef Name="CitaID" />
+    </Key>
+    <Property Name="CitaID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="PacienteID" Type="Int32" Nullable="false" />
+    <Property Name="MedicoID" Type="Int32" Nullable="false" />
+    <Property Name="FechaCita" Type="DateTime" Nullable="false" Precision="0" />
+    <Property Name="HoraCita" Type="Time" Nullable="false" Precision="7" />
+    <Property Name="Motivo" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+    <Property Name="Estado" Type="String" MaxLength="20" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Observaciones" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+    <Property Name="FechaCreacion" Type="DateTime" Nullable="false" Precision="3" />
+    <Property Name="CreadoPor" Type="Int32" />
+    <NavigationProperty Name="Usuarios" Relationship="Self.FK_Citas_CreadoPor" FromRole="Citas" ToRole="Usuarios" />
+    <NavigationProperty Name="Medicos" Relationship="Self.FK_Citas_Medicos" FromRole="Citas" ToRole="Medicos" />
+    <NavigationProperty Name="Pacientes" Relationship="Self.FK_Citas_Pacientes" FromRole="Citas" ToRole="Pacientes" />
+    <NavigationProperty Name="Consultas" Relationship="Self.FK_Consultas_Citas" FromRole="Citas" ToRole="Consultas" />
+  </EntityType>
+  <EntityType Name="Consultas">
+    <Key>
+      <PropertyRef Name="ConsultaID" />
+    </Key>
+    <Property Name="ConsultaID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="CitaID" Type="Int32" Nullable="false" />
+    <Property Name="MedicoID" Type="Int32" Nullable="false" />
+    <Property Name="PacienteID" Type="Int32" Nullable="false" />
+    <Property Name="FechaConsulta" Type="DateTime" Nullable="false" Precision="3" />
+    <Property Name="MotivoConsulta" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+    <Property Name="ExamenFisico" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+    <Property Name="Diagnostico" Type="String" MaxLength="500" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Tratamiento" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+    <Property Name="Indicaciones" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+    <Property Name="PesoKg" Type="Decimal" Precision="5" Scale="2" />
+    <Property Name="TallaCm" Type="Decimal" Precision="5" Scale="2" />
+    <Property Name="PresionArterial" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+    <Property Name="Temperatura" Type="Decimal" Precision="4" Scale="1" />
+    <Property Name="ProximaRevision" Type="DateTime" Precision="0" />
+    <NavigationProperty Name="Citas" Relationship="Self.FK_Consultas_Citas" FromRole="Consultas" ToRole="Citas" />
+    <NavigationProperty Name="Medicos" Relationship="Self.FK_Consultas_Medicos" FromRole="Consultas" ToRole="Medicos" />
+    <NavigationProperty Name="Pacientes" Relationship="Self.FK_Consultas_Pacientes" FromRole="Consultas" ToRole="Pacientes" />
+    <NavigationProperty Name="Recetas" Relationship="Self.FK_Recetas_Consultas" FromRole="Consultas" ToRole="Recetas" />
+  </EntityType>
+  <EntityType Name="DetalleReceta">
+    <Key>
+      <PropertyRef Name="DetalleID" />
+    </Key>
+    <Property Name="DetalleID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="RecetaID" Type="Int32" Nullable="false" />
+    <Property Name="MedicamentoID" Type="Int32" Nullable="false" />
+    <Property Name="Dosis" Type="String" MaxLength="100" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Cantidad" Type="Int32" Nullable="false" />
+    <Property Name="Indicaciones" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+    <NavigationProperty Name="Medicamentos" Relationship="Self.FK_DetalleReceta_Medicamentos" FromRole="DetalleReceta" ToRole="Medicamentos" />
+    <NavigationProperty Name="Recetas" Relationship="Self.FK_DetalleReceta_Recetas" FromRole="DetalleReceta" ToRole="Recetas" />
+  </EntityType>
+  <EntityType Name="Especialidades">
+    <Key>
+      <PropertyRef Name="EspecialidadID" />
+    </Key>
+    <Property Name="EspecialidadID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="Nombre" Type="String" MaxLength="100" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Activo" Type="Boolean" Nullable="false" />
+    <NavigationProperty Name="Medicos" Relationship="Self.FK_Medicos_Especialidades" FromRole="Especialidades" ToRole="Medicos" />
+  </EntityType>
+  <EntityType Name="Medicamentos">
+    <Key>
+      <PropertyRef Name="MedicamentoID" />
+    </Key>
+    <Property Name="MedicamentoID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="Nombre" Type="String" MaxLength="150" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Laboratorio" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+    <Property Name="Presentacion" Type="String" MaxLength="100" FixedLength="false" Unicode="false" />
+    <Property Name="ViaAdministracion" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+    <Property Name="StockActual" Type="Int32" Nullable="false" />
+    <Property Name="StockMinimo" Type="Int32" Nullable="false" />
+    <Property Name="Precio" Type="Decimal" Precision="8" Scale="2" />
+    <Property Name="Activo" Type="Boolean" Nullable="false" />
+    <NavigationProperty Name="DetalleReceta" Relationship="Self.FK_DetalleReceta_Medicamentos" FromRole="Medicamentos" ToRole="DetalleReceta" />
+  </EntityType>
+  <EntityType Name="Medicos">
+    <Key>
+      <PropertyRef Name="MedicoID" />
+    </Key>
+    <Property Name="MedicoID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="UsuarioID" Type="Int32" Nullable="false" />
+    <Property Name="EspecialidadID" Type="Int32" Nullable="false" />
+    <Property Name="NumeroLicencia" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Consultorio" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+    <Property Name="HoraEntrada" Type="Time" Nullable="false" Precision="7" />
+    <Property Name="HoraSalida" Type="Time" Nullable="false" Precision="7" />
+    <Property Name="Activo" Type="Boolean" Nullable="false" />
+    <NavigationProperty Name="Citas" Relationship="Self.FK_Citas_Medicos" FromRole="Medicos" ToRole="Citas" />
+    <NavigationProperty Name="Consultas" Relationship="Self.FK_Consultas_Medicos" FromRole="Medicos" ToRole="Consultas" />
+    <NavigationProperty Name="Especialidades" Relationship="Self.FK_Medicos_Especialidades" FromRole="Medicos" ToRole="Especialidades" />
+    <NavigationProperty Name="Usuarios" Relationship="Self.FK_Medicos_Usuarios" FromRole="Medicos" ToRole="Usuarios" />
+    <NavigationProperty Name="Recetas" Relationship="Self.FK_Recetas_Medicos" FromRole="Medicos" ToRole="Recetas" />
+  </EntityType>
+  <EntityType Name="Pacientes">
+    <Key>
+      <PropertyRef Name="PacienteID" />
+    </Key>
+    <Property Name="PacienteID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="UsuarioID" Type="Int32" />
+    <Property Name="Nombres" Type="String" MaxLength="100" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Apellidos" Type="String" MaxLength="100" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="DUI" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+    <Property Name="FechaNacimiento" Type="DateTime" Nullable="false" Precision="0" />
+    <Property Name="Sexo" Type="String" MaxLength="1" FixedLength="true" Unicode="false" Nullable="false" />
+    <Property Name="Telefono" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+    <Property Name="Email" Type="String" MaxLength="150" FixedLength="false" Unicode="false" />
+    <Property Name="Direccion" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
+    <Property Name="TipoSangre" Type="String" MaxLength="5" FixedLength="false" Unicode="false" />
+    <Property Name="Alergias" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+    <Property Name="AntecedentesMedicos" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+    <Property Name="FechaRegistro" Type="DateTime" Nullable="false" Precision="3" />
+    <Property Name="Activo" Type="Boolean" Nullable="false" />
+    <NavigationProperty Name="Citas" Relationship="Self.FK_Citas_Pacientes" FromRole="Pacientes" ToRole="Citas" />
+    <NavigationProperty Name="Consultas" Relationship="Self.FK_Consultas_Pacientes" FromRole="Pacientes" ToRole="Consultas" />
+    <NavigationProperty Name="Usuarios" Relationship="Self.FK_Pacientes_Usuarios" FromRole="Pacientes" ToRole="Usuarios" />
+    <NavigationProperty Name="Recetas" Relationship="Self.FK_Recetas_Pacientes" FromRole="Pacientes" ToRole="Recetas" />
+  </EntityType>
+  <EntityType Name="Recetas">
+    <Key>
+      <PropertyRef Name="RecetaID" />
+    </Key>
+    <Property Name="RecetaID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="ConsultaID" Type="Int32" Nullable="false" />
+    <Property Name="MedicoID" Type="Int32" Nullable="false" />
+    <Property Name="PacienteID" Type="Int32" Nullable="false" />
+    <Property Name="FechaEmision" Type="DateTime" Nullable="false" Precision="3" />
+    <Property Name="FechaVencimiento" Type="DateTime" Precision="0" />
+    <Property Name="Observaciones" Type="String" MaxLength="500" FixedLength="false" Unicode="false" />
+    <Property Name="Estado" Type="String" MaxLength="20" FixedLength="false" Unicode="false" Nullable="false" />
+    <NavigationProperty Name="Consultas" Relationship="Self.FK_Recetas_Consultas" FromRole="Recetas" ToRole="Consultas" />
+    <NavigationProperty Name="DetalleReceta" Relationship="Self.FK_DetalleReceta_Recetas" FromRole="Recetas" ToRole="DetalleReceta" />
+    <NavigationProperty Name="Medicos" Relationship="Self.FK_Recetas_Medicos" FromRole="Recetas" ToRole="Medicos" />
+    <NavigationProperty Name="Pacientes" Relationship="Self.FK_Recetas_Pacientes" FromRole="Recetas" ToRole="Pacientes" />
+  </EntityType>
+  <EntityType Name="Roles">
+    <Key>
+      <PropertyRef Name="RolID" />
+    </Key>
+    <Property Name="RolID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="Nombre" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Activo" Type="Boolean" Nullable="false" />
+    <NavigationProperty Name="Usuarios" Relationship="Self.FK_Usuarios_Roles" FromRole="Roles" ToRole="Usuarios" />
+  </EntityType>
+  <EntityType Name="Usuarios">
+    <Key>
+      <PropertyRef Name="UsuarioID" />
+    </Key>
+    <Property Name="UsuarioID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="RolID" Type="Int32" Nullable="false" />
+    <Property Name="Nombres" Type="String" MaxLength="100" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Apellidos" Type="String" MaxLength="100" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Email" Type="String" MaxLength="150" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="PasswordHash" Type="String" MaxLength="256" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Telefono" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+    <Property Name="Activo" Type="Boolean" Nullable="false" />
+    <Property Name="FechaCreacion" Type="DateTime" Nullable="false" Precision="3" />
+    <Property Name="UltimoAcceso" Type="DateTime" Precision="3" />
+    <NavigationProperty Name="Citas" Relationship="Self.FK_Citas_CreadoPor" FromRole="Usuarios" ToRole="Citas" />
+    <NavigationProperty Name="Medicos" Relationship="Self.FK_Medicos_Usuarios" FromRole="Usuarios" ToRole="Medicos" />
+    <NavigationProperty Name="Pacientes" Relationship="Self.FK_Pacientes_Usuarios" FromRole="Usuarios" ToRole="Pacientes" />
+    <NavigationProperty Name="Roles" Relationship="Self.FK_Usuarios_Roles" FromRole="Usuarios" ToRole="Roles" />
+  </EntityType>
+  <Association Name="FK_Citas_CreadoPor">
+    <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="0..1" />
+    <End Role="Citas" Type="Self.Citas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Usuarios">
+        <PropertyRef Name="UsuarioID" />
+      </Principal>
+      <Dependent Role="Citas">
+        <PropertyRef Name="CreadoPor" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Citas_Medicos">
+    <End Role="Medicos" Type="Self.Medicos" Multiplicity="1" />
+    <End Role="Citas" Type="Self.Citas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Medicos">
+        <PropertyRef Name="MedicoID" />
+      </Principal>
+      <Dependent Role="Citas">
+        <PropertyRef Name="MedicoID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Citas_Pacientes">
+    <End Role="Pacientes" Type="Self.Pacientes" Multiplicity="1" />
+    <End Role="Citas" Type="Self.Citas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Pacientes">
+        <PropertyRef Name="PacienteID" />
+      </Principal>
+      <Dependent Role="Citas">
+        <PropertyRef Name="PacienteID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Consultas_Citas">
+    <End Role="Citas" Type="Self.Citas" Multiplicity="1" />
+    <End Role="Consultas" Type="Self.Consultas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Citas">
+        <PropertyRef Name="CitaID" />
+      </Principal>
+      <Dependent Role="Consultas">
+        <PropertyRef Name="CitaID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Consultas_Medicos">
+    <End Role="Medicos" Type="Self.Medicos" Multiplicity="1" />
+    <End Role="Consultas" Type="Self.Consultas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Medicos">
+        <PropertyRef Name="MedicoID" />
+      </Principal>
+      <Dependent Role="Consultas">
+        <PropertyRef Name="MedicoID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Consultas_Pacientes">
+    <End Role="Pacientes" Type="Self.Pacientes" Multiplicity="1" />
+    <End Role="Consultas" Type="Self.Consultas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Pacientes">
+        <PropertyRef Name="PacienteID" />
+      </Principal>
+      <Dependent Role="Consultas">
+        <PropertyRef Name="PacienteID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Recetas_Consultas">
+    <End Role="Consultas" Type="Self.Consultas" Multiplicity="1" />
+    <End Role="Recetas" Type="Self.Recetas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Consultas">
+        <PropertyRef Name="ConsultaID" />
+      </Principal>
+      <Dependent Role="Recetas">
+        <PropertyRef Name="ConsultaID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_DetalleReceta_Medicamentos">
+    <End Role="Medicamentos" Type="Self.Medicamentos" Multiplicity="1" />
+    <End Role="DetalleReceta" Type="Self.DetalleReceta" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Medicamentos">
+        <PropertyRef Name="MedicamentoID" />
+      </Principal>
+      <Dependent Role="DetalleReceta">
+        <PropertyRef Name="MedicamentoID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_DetalleReceta_Recetas">
+    <End Role="Recetas" Type="Self.Recetas" Multiplicity="1" />
+    <End Role="DetalleReceta" Type="Self.DetalleReceta" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Recetas">
+        <PropertyRef Name="RecetaID" />
+      </Principal>
+      <Dependent Role="DetalleReceta">
+        <PropertyRef Name="RecetaID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Medicos_Especialidades">
+    <End Role="Especialidades" Type="Self.Especialidades" Multiplicity="1" />
+    <End Role="Medicos" Type="Self.Medicos" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Especialidades">
+        <PropertyRef Name="EspecialidadID" />
+      </Principal>
+      <Dependent Role="Medicos">
+        <PropertyRef Name="EspecialidadID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Medicos_Usuarios">
+    <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="1" />
+    <End Role="Medicos" Type="Self.Medicos" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Usuarios">
+        <PropertyRef Name="UsuarioID" />
+      </Principal>
+      <Dependent Role="Medicos">
+        <PropertyRef Name="UsuarioID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Recetas_Medicos">
+    <End Role="Medicos" Type="Self.Medicos" Multiplicity="1" />
+    <End Role="Recetas" Type="Self.Recetas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Medicos">
+        <PropertyRef Name="MedicoID" />
+      </Principal>
+      <Dependent Role="Recetas">
+        <PropertyRef Name="MedicoID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Pacientes_Usuarios">
+    <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="0..1" />
+    <End Role="Pacientes" Type="Self.Pacientes" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Usuarios">
+        <PropertyRef Name="UsuarioID" />
+      </Principal>
+      <Dependent Role="Pacientes">
+        <PropertyRef Name="UsuarioID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Recetas_Pacientes">
+    <End Role="Pacientes" Type="Self.Pacientes" Multiplicity="1" />
+    <End Role="Recetas" Type="Self.Recetas" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Pacientes">
+        <PropertyRef Name="PacienteID" />
+      </Principal>
+      <Dependent Role="Recetas">
+        <PropertyRef Name="PacienteID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Usuarios_Roles">
+    <End Role="Roles" Type="Self.Roles" Multiplicity="1" />
+    <End Role="Usuarios" Type="Self.Usuarios" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Roles">
+        <PropertyRef Name="RolID" />
+      </Principal>
+      <Dependent Role="Usuarios">
+        <PropertyRef Name="RolID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="SaludPlussEntities1" annotation:LazyLoadingEnabled="true">
+    <EntitySet Name="Citas" EntityType="Self.Citas" />
+    <EntitySet Name="Consultas" EntityType="Self.Consultas" />
+    <EntitySet Name="DetalleReceta" EntityType="Self.DetalleReceta" />
+    <EntitySet Name="Especialidades" EntityType="Self.Especialidades" />
+    <EntitySet Name="Medicamentos" EntityType="Self.Medicamentos" />
+    <EntitySet Name="Medicos" EntityType="Self.Medicos" />
+    <EntitySet Name="Pacientes" EntityType="Self.Pacientes" />
+    <EntitySet Name="Recetas" EntityType="Self.Recetas" />
+    <EntitySet Name="Roles" EntityType="Self.Roles" />
+    <EntitySet Name="Usuarios" EntityType="Self.Usuarios" />
+    <AssociationSet Name="FK_Citas_CreadoPor" Association="Self.FK_Citas_CreadoPor">
+      <End Role="Usuarios" EntitySet="Usuarios" />
+      <End Role="Citas" EntitySet="Citas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Citas_Medicos" Association="Self.FK_Citas_Medicos">
+      <End Role="Medicos" EntitySet="Medicos" />
+      <End Role="Citas" EntitySet="Citas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Citas_Pacientes" Association="Self.FK_Citas_Pacientes">
+      <End Role="Pacientes" EntitySet="Pacientes" />
+      <End Role="Citas" EntitySet="Citas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Consultas_Citas" Association="Self.FK_Consultas_Citas">
+      <End Role="Citas" EntitySet="Citas" />
+      <End Role="Consultas" EntitySet="Consultas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Consultas_Medicos" Association="Self.FK_Consultas_Medicos">
+      <End Role="Medicos" EntitySet="Medicos" />
+      <End Role="Consultas" EntitySet="Consultas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Consultas_Pacientes" Association="Self.FK_Consultas_Pacientes">
+      <End Role="Pacientes" EntitySet="Pacientes" />
+      <End Role="Consultas" EntitySet="Consultas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Recetas_Consultas" Association="Self.FK_Recetas_Consultas">
+      <End Role="Consultas" EntitySet="Consultas" />
+      <End Role="Recetas" EntitySet="Recetas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_DetalleReceta_Medicamentos" Association="Self.FK_DetalleReceta_Medicamentos">
+      <End Role="Medicamentos" EntitySet="Medicamentos" />
+      <End Role="DetalleReceta" EntitySet="DetalleReceta" />
+    </AssociationSet>
+    <AssociationSet Name="FK_DetalleReceta_Recetas" Association="Self.FK_DetalleReceta_Recetas">
+      <End Role="Recetas" EntitySet="Recetas" />
+      <End Role="DetalleReceta" EntitySet="DetalleReceta" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Medicos_Especialidades" Association="Self.FK_Medicos_Especialidades">
+      <End Role="Especialidades" EntitySet="Especialidades" />
+      <End Role="Medicos" EntitySet="Medicos" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Medicos_Usuarios" Association="Self.FK_Medicos_Usuarios">
+      <End Role="Usuarios" EntitySet="Usuarios" />
+      <End Role="Medicos" EntitySet="Medicos" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Recetas_Medicos" Association="Self.FK_Recetas_Medicos">
+      <End Role="Medicos" EntitySet="Medicos" />
+      <End Role="Recetas" EntitySet="Recetas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Pacientes_Usuarios" Association="Self.FK_Pacientes_Usuarios">
+      <End Role="Usuarios" EntitySet="Usuarios" />
+      <End Role="Pacientes" EntitySet="Pacientes" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Recetas_Pacientes" Association="Self.FK_Recetas_Pacientes">
+      <End Role="Pacientes" EntitySet="Pacientes" />
+      <End Role="Recetas" EntitySet="Recetas" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Usuarios_Roles" Association="Self.FK_Usuarios_Roles">
+      <End Role="Roles" EntitySet="Roles" />
+      <End Role="Usuarios" EntitySet="Usuarios" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>
