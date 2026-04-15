@@ -4,7 +4,7 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="9798cbbb3a4349b590353aac77c489c4" Name="Diagram1">
+      <Diagram DiagramId="33d91d80f6b144df8f0c22921049ef01" Name="Diagram1">
         <EntityTypeShape EntityType="SaludPlussModel.Citas" Width="1.5" PointX="7.5" PointY="11.5" IsExpanded="true" />
         <EntityTypeShape EntityType="SaludPlussModel.Consultas" Width="1.5" PointX="9.75" PointY="11" IsExpanded="true" />
         <EntityTypeShape EntityType="SaludPlussModel.DetalleReceta" Width="1.5" PointX="14.25" PointY="12.125" IsExpanded="true" />
@@ -14,7 +14,6 @@
         <EntityTypeShape EntityType="SaludPlussModel.Pacientes" Width="1.5" PointX="5.25" PointY="15.125" IsExpanded="true" />
         <EntityTypeShape EntityType="SaludPlussModel.Recetas" Width="1.5" PointX="12" PointY="11.75" IsExpanded="true" />
         <EntityTypeShape EntityType="SaludPlussModel.Roles" Width="1.5" PointX="0.75" PointY="7.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="SaludPlussModel.sysdiagrams" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
         <EntityTypeShape EntityType="SaludPlussModel.Usuarios" Width="1.5" PointX="3" PointY="6.875" IsExpanded="true" />
         <AssociationConnector Association="SaludPlussModel.FK_Citas_CreadoPor" ManuallyRouted="false" />
         <AssociationConnector Association="SaludPlussModel.FK_Citas_Medicos" ManuallyRouted="false" />

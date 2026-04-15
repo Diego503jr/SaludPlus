@@ -13,10 +13,10 @@ namespace SaludPlus.Models
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
     
-    public partial class SaludPlussEntities : DbContext
+    public partial class SaludPlussEntities1 : DbContext
     {
-        public SaludPlussEntities()
-            : base("name=SaludPlussEntities")
+        public SaludPlussEntities1()
+            : base("name=SaludPlussEntities1")
         {
         }
     
@@ -34,7 +34,6 @@ namespace SaludPlus.Models
         public virtual DbSet<Pacientes> Pacientes { get; set; }
         public virtual DbSet<Recetas> Recetas { get; set; }
         public virtual DbSet<Roles> Roles { get; set; }
-        public virtual DbSet<sysdiagrams> sysdiagrams { get; set; }
         public virtual DbSet<Usuarios> Usuarios { get; set; }
     }
 }
