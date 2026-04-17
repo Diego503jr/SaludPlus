@@ -1,4 +1,10 @@
-﻿:root {
+﻿/*LAYOUT*/
+html, body {
+    max-width: 100vw;
+    overflow-x: hidden; /* Prohibido el scroll horizontal en el cuerpo principal */
+    position: relative;
+}
+:root {
     --lk-primary: #3e60d5;
     --lk-sidebar-bg: #ffffff;
     --lk-body-bg: #f4f7fe;
@@ -23,7 +29,7 @@ body {
     border-right: 1px solid #eef2f7;
     position: fixed;
     height: 100vh;
-    z-index: 1030;
+  
 }
 
 .content-page {
@@ -31,6 +37,8 @@ body {
     margin-left: var(--sidebar-width);
     display: flex;
     flex-direction: column;
+    height: 100vh; /* Ocupa el 100% de la pantalla */
+    overflow: hidden; /* Evita que la página entera tenga scroll */
 }
 
 .navbar-custom {
@@ -41,8 +49,10 @@ body {
 }
 
 .main-content {
+    flex: 1; /* Esto hace que el contenido crezca para llenar el espacio entre nav y footer */
+    overflow-y: auto; /* Solo el contenido central tendrá scroll vertical si es muy largo */
     padding: 25px;
-    flex-grow: 1;
+    background-color: var(--lk-body-bg);
 }
 
 .dropdown-menu {
@@ -84,4 +94,14 @@ body {
     .content-page {
         margin-left: 0;
     }
+    .main-content {
+        padding: 15px; /* Reducimos padding en móvil para ganar espacio */
+    }
+}
+
+footer {
+    background: white;
+    padding: 15px;
+    border-top: 1px solid #eef2f7;
+    flex-shrink: 0; /* No deja que el footer se encoja */
 }
