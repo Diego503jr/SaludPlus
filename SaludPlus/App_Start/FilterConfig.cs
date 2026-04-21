@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using SaludPlus.Filters;
+using System.Web;
 using System.Web.Mvc;
 
 namespace SaludPlus
@@ -8,6 +9,7 @@ namespace SaludPlus
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
         {
             filters.Add(new HandleErrorAttribute());
+            filters.Add(new VerificarSesion());
         }
     }
 }

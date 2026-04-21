@@ -1,0 +1,93 @@
+﻿@model SaludPlus.Models.Usuarios
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - SaludPlus</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="@Url.Content("~/Content/styles/Login.css")" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card login-card p-4">
+                    <div class="card-body">
+                        <h2 class="text-center mb-4 text-primary">Salud Plus</h2>
+                        <p class="text-center text-muted">Ingresa tus credenciales</p>
+
+                        <hr />
+
+                        <div class="mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            @Html.TextBox("Email", null, new { @id = "txtEmail", @class = "form-control", placeholder = "nombre@correo.com", required = "required" })
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Contraseña</label>
+                            @Html.Password("PasswordHash", null, new { @id = "txtPassword", @class = "form-control", placeholder = "********", required = "required" })
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary btn-login" onclick="IniciarSesion()">
+                                Iniciar Sesión
+                            </button>
+                        </div>
+
+                        <div id="msgError" class="alert alert-danger mt-3 d-none" role="alert">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+    function IniciarSesion() {
+        $("#msgError").addClass("d-none").text("");
+
+        var usuarioModel = {
+            Email: $("#txtEmail").val(),
+            PasswordHash: $("#txtPassword").val()
+        };
+
+        if (!usuarioModel.Email || !usuarioModel.PasswordHash) {
+            $("#msgError").removeClass("d-none").text("Por favor, llena todos los campos.");
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("ValidarUsuario", "Login")',
+            type: 'POST',
+            data: JSON.stringify(usuarioModel),
+            contentType: 'application/json',
+            success: function (response) {
+                if (response.success) {
+                    window.location.href = '@Url.Action("Index", "Home")';
+                } else {
+                    $("#msgError").removeClass("d-none").text(response.message);
+                }
+            },
+            error: function () {
+                $("#msgError").removeClass("d-none").text("Error de conexión con el servidor.");
+            }
+        });
+    }
+
+    $("#txtPassword").keypress(function (e) {
+        if (e.which == 13) {
+            IniciarSesion();
+        }
+    });
+    </script>
+
+</body>
+</html>
