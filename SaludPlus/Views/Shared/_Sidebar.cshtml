@@ -1,4 +1,11 @@
-﻿<div class="d-flex flex-column h-100">
+﻿@using SaludPlus.Models
+@{
+    var usuario = (Usuarios)Session["User"];
+    var nombreRol = usuario?.Roles?.Nombre ?? "";
+
+}
+
+<div class="d-flex flex-column h-100">
     <div class="sidebar-logo-container d-none d-lg-flex">
         <a href="@Url.Action("Index", "Home")" class="text-decoration-none">
             <img src="@Url.Content("~/Content/img/SaludPlusLogo.png")"
@@ -17,12 +24,43 @@
 
         <small class="text-uppercase text-muted fw-bold mt-3 mb-2 ps-2" style="font-size: 11px;">Gestión Operativa</small>
 
-        <a href="@Url.Action("Index", "Pacientes")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-            <i class="fas fa-user-injured me-2"></i> Gestión Pacientes
-        </a>
+        @* --- OPCIONES SEGÚN ROL --- *@
 
-        <a href="#" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-            <i class="fas fa-user-md me-2"></i> Gestión Médicos
-        </a>
+        @if (nombreRol == "Administrador")
+        {
+            <a href="@Url.Action("Index", "Pacientes")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-user-injured me-2"></i> Gestión Pacientes
+            </a>
+            <a href="@Url.Action("Index", "Medicos")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-user-md me-2"></i> Gestión Médicos
+            </a>
+            <a href="@Url.Action("Index", "Usuarios")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-users-cog me-2"></i> Usuarios y Roles
+            </a>
+        }
+        else if (nombreRol == "Medico")
+        {
+            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-calendar-check me-2"></i> Mis Citas
+            </a>
+            <a href="@Url.Action("Calendario", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-calendar-alt me-2"></i> Calendario
+            </a>
+        }
+        else if (nombreRol == "Recepcionista")
+        {
+            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-calendar-plus me-2"></i> Citas
+            </a>
+            <a href="@Url.Action("Index", "Medicos")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-user-md me-2"></i> Médicos
+            </a>
+            <a href="@Url.Action("Index", "Pacientes")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-user-injured me-2"></i> Pacientes
+            </a>
+            <a href="@Url.Action("Historial", "Consultas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-history me-2"></i> Historial
+            </a>
+        }
     </div>
 </div>

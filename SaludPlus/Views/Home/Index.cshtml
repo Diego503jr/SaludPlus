@@ -1,23 +1,10 @@
-﻿<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Inicio</title>
+﻿@{
+    ViewBag.Title = "Inicio";
+}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-    <div class="d-flex justify-content-center align-items-center" style="height: calc(100vh - 120px);">
-        <img src="~/Content/img/SaludPlus.png"
-             class="img-fluid"
-             style="max-width: 60%; height: auto;"
-             alt="SaludPlus">
-    </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
+<div class="d-flex justify-content-center align-items-center" style="height: calc(100vh - 120px);">
+    <img src="@Url.Content("~/Content/img/SaludPlus.png")"
+         class="img-fluid"
+         style="max-width: 60%; height: auto;"
+         alt="SaludPlus">
+</div>

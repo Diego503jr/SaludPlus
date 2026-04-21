@@ -1,4 +1,9 @@
-﻿<nav class="navbar navbar-expand navbar-light navbar-custom sticky-top">
+﻿@using SaludPlus.Models
+@{
+    var u = (Usuarios)Session["User"];
+}
+
+<nav class="navbar navbar-expand navbar-light navbar-custom sticky-top">
     <div class="container-fluid">
         <button class="btn btn-light border d-lg-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
             <i class="fas fa-bars"></i>
@@ -9,16 +14,27 @@
         <div class="ms-auto dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="text-end me-3 d-none d-sm-block">
-                    <p class="mb-0 fw-bold small">Admin Usuario</p>
-                    <p class="mb-0 text-muted" style="font-size: 11px;">Administrador</p>
+                    @if (u != null)
+                    {
+                        <p class="mb-0 fw-bold small">@u.Nombres @u.Apellidos</p>
+                        <p class="mb-0 text-muted" style="font-size: 11px;">@(u.Roles?.Nombre ?? "Sin Rol")</p>
+                    }
+                    else
+                    {
+                        <p class="mb-0 fw-bold small">Invitado</p>
+                    }
                 </div>
                 <i class="bi bi-person-circle fs-3 text-primary"></i>
             </a>
 
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-                <li><a class="dropdown-item py-2" href="#"><i class="bi bi-gear me-2"></i>Configuración</a></li>
+                <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i>Perfil</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item py-2 text-danger fw-bold" href="#"><i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión</a></li>
+                <li>
+                    <a class="dropdown-item py-2 text-danger fw-bold" href="@Url.Action("Logout", "Login")">
+                        <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                    </a>
+                </li>
             </ul>
         </div>
     </div>
