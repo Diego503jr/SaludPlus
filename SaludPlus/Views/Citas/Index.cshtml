@@ -1,0 +1,331 @@
+﻿@{
+    ViewBag.Title = "Gestión de Citas";
+}
+
+<link href="~/Content/styles/Admin.css" rel="stylesheet" />
+
+@* Estructura de tabla *@
+<div class="container-fluid mt-4 px-4">
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <h5 id="tituloVista" class="fw-bold mb-0 text-dark text-center text-md-start">Agenda de Citas</h5>
+
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-primary btn-sm px-3" onclick="abrirModal(null)">
+                    <i class="bi bi-calendar-plus me-1"></i> Agendar Cita
+                </button>
+                <button class="btn btn-outline-secondary btn-sm px-3" onclick="cargarDatos()">
+                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle table-nowrap mb-0" id="tablaCitas">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4 text-muted" style="width: 120px;">Fecha y Hora</th>
+                        <th class="text-muted">Paciente</th>
+                        <th class="text-muted">Médico</th>
+                        <th class="text-muted">Motivo</th>
+                        <th class="text-muted">Estado</th>
+                        <th class="text-muted pe-4 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* Modal para agendar/modificar Citas *@
+<div class="modal fade shadow-lg" id="modalCita" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-primary text-white py-3 px-4 rounded-top-4">
+                <h5 class="modal-title fw-bold" id="modalLabel">
+                    <i class="bi bi-calendar-event me-2"></i>Información de la Cita
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4 bg-light-subtle">
+                <input type="hidden" id="txtIdCita" value="0" />
+
+                <div class="row g-3">
+                    <div class="col-12"><small class="text-uppercase fw-bold text-muted" style="letter-spacing: 1px;">Participantes</small></div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Paciente</label>
+                        <select id="cboPaciente" class="form-select border-start-0">
+                            <option value="">Cargando pacientes...</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Médico Asignado</label>
+                        <select id="cboMedico" class="form-select border-start-0">
+                            <option value="">Cargando médicos...</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 mt-4"><small class="text-uppercase fw-bold text-muted" style="letter-spacing: 1px;">Programación</small></div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Fecha</label>
+                        <input type="date" id="txtFechaCita" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Hora</label>
+                        <input type="time" id="txtHoraCita" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Estado</label>
+                        <select id="cboEstado" class="form-select">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Confirmada">Confirmada</option>
+                            <option value="Completada">Completada</option>
+                            <option value="Cancelada">Cancelada</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 mt-4"><small class="text-uppercase fw-bold text-muted" style="letter-spacing: 1px;">Detalles Médicos</small></div>
+
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Motivo de la consulta</label>
+                        <textarea id="txtMotivo" class="form-control" rows="2" placeholder="Ej. Dolor de cabeza, chequeo general..."></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Observaciones Internas</label>
+                        <textarea id="txtObservaciones" class="form-control" rows="2" placeholder="Notas de recepción..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light border-0 py-3 rounded-bottom-4">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" onclick="guardar()">Guardar Cita</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal para cambiar estado (Confirmar/Cancelar) *@
+<div class="modal fade" id="modalEstado" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning text-dark py-2 px-3">
+                <h6 class="modal-title fw-bold small text-uppercase mb-0">Gestión Rápida</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <input type="hidden" id="hiddenIdEstado" />
+                <h6 class="fw-bold text-dark mb-3">¿Qué desea hacer con esta cita?</h6>
+                <p class="text-muted small" id="lblDetalleEstadoCita"></p>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success fw-bold" onclick="ejecutarCambioEstado('Confirmada')"><i class="bi bi-check-circle me-1"></i> Confirmar Cita</button>
+                    <button class="btn btn-danger fw-bold" onclick="ejecutarCambioEstado('Cancelada')"><i class="bi bi-x-circle me-1"></i> Cancelar Cita</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            cargarDatos();
+            cargarSelects(); // Cargamos médicos y pacientes al iniciar
+        });
+
+        // Formato para mostrar fecha (extraído de tu código de pacientes)
+        function formatearFecha(fechaJson) {
+            if (!fechaJson) return "";
+            var milisegundos = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
+            var fecha = new Date(milisegundos);
+            var dia = ("0" + fecha.getDate()).slice(-2);
+            var mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
+            var anio = fecha.getFullYear();
+            return dia + "/" + mes + "/" + anio;
+        }
+
+        // Formato para input type="date"
+        function formatearFechaInput(fechaJson) {
+            if (!fechaJson) return "";
+            var milisegundos = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
+            var fecha = new Date(milisegundos);
+            var dia = ("0" + fecha.getDate()).slice(-2);
+            var mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
+            var anio = fecha.getFullYear();
+            return anio + "-" + mes + "-" + dia;
+        }
+
+        // Función para cargar selects con AJAX
+        function cargarSelects() {
+            // Cargar Pacientes
+            $.get('@Url.Action("ObtenerPacientesActivos", "Citas")', function (data) {
+                let html = '<option value="">-- Seleccione un Paciente --</option>';
+                $.each(data, function (i, item) {
+                    html += `<option value="${item.Id}">${item.Texto}</option>`;
+                });
+                $("#cboPaciente").html(html);
+            });
+
+            // Cargar Médicos
+            $.get('@Url.Action("ObtenerMedicosActivos", "Citas")', function (data) {
+                let html = '<option value="">-- Seleccione un Médico --</option>';
+                $.each(data, function (i, item) {
+                    html += `<option value="${item.Id}">${item.Texto}</option>`;
+                });
+                $("#cboMedico").html(html);
+            });
+        }
+
+        // 1. FUNCION PARA LISTAR CITAS
+        function cargarDatos() {
+            $.ajax({
+                url: '@Url.Action("Listar", "Citas")',
+                type: "GET",
+                success: function (data) {
+                    var html = "";
+                    $.each(data, function (i, item) {
+
+                        // Formato visual para el Estado
+                        let badgeColor = "bg-secondary";
+                        if(item.Estado === "Confirmada") badgeColor = "bg-success";
+                        if(item.Estado === "Pendiente") badgeColor = "bg-warning text-dark";
+                        if(item.Estado === "Cancelada") badgeColor = "bg-danger";
+                        if(item.Estado === "Completada") badgeColor = "bg-info text-dark";
+
+                        // Formatear Hora (asumiendo que viene como objeto de TimeSpan o string, ajustamos para mostrar)
+                        let horaStr = item.HoraCita && item.HoraCita.Hours != undefined ?
+                            ("0" + item.HoraCita.Hours).slice(-2) + ":" + ("0" + item.HoraCita.Minutes).slice(-2) :
+                            (item.HoraCita || "00:00");
+
+                        html += "<tr>" +
+                            "<td class='ps-4'>" +
+                                "<div class='fw-bold text-dark'>" + formatearFecha(item.FechaCita) + "</div>" +
+                                "<small class='text-muted'><i class='bi bi-clock'></i> " + horaStr + "</small>" +
+                            "</td>" +
+                            "<td><h6 class='mb-0 fw-bold' style='font-size: 0.9rem;'>" + item.PacienteNombre + "</h6></td>" +
+                            "<td><span class='text-muted' style='font-size: 0.85rem;'><i class='bi bi-bandaid'></i> Dr. " + item.MedicoNombre + "</span></td>" +
+                            "<td><span class='text-muted text-truncate d-inline-block' style='max-width: 150px; font-size: 0.85rem;' title='"+ item.Motivo +"'>" + (item.Motivo || "---") + "</span></td>" +
+                            "<td><span class='badge " + badgeColor + " px-3 py-2 fw-bold' style='font-size: 0.75rem;'>" + item.Estado + "</span></td>" +
+                            "<td class='pe-4 text-center'>" +
+                                "<div class='btn-group shadow-sm'>" +
+                                    "<button class='btn btn-light btn-sm border-end text-primary' title='Editar' onclick='abrirModal(" + JSON.stringify(item).replace(/"/g, '&quot;') + ")'><i class='bi bi-pencil'></i></button>" +
+                                    "<button class='btn btn-light btn-sm text-dark' title='Cambiar Estado' onclick='abrirModalEstado(" + item.CitaID + ", \"" + item.PacienteNombre + "\")'><i class='bi bi-gear'></i></button>" +
+                                "</div>" +
+                            "</td>" +
+                            "</tr>";
+                    });
+                    $("#tablaCitas tbody").html(html);
+                }
+            });
+        }
+
+        // FUNCION PARA ABRIR EL MODAL PRINCIPAL (AGENDAR/EDITAR)
+        function abrirModal(cita) {
+            if (cita == null) {
+                // Nueva Cita
+                $("#txtIdCita").val(0);
+                $("#cboPaciente").val("");
+                $("#cboMedico").val("");
+                $("#txtFechaCita").val("");
+                $("#txtHoraCita").val("");
+                $("#txtMotivo").val("");
+                $("#txtObservaciones").val("");
+                $("#cboEstado").val("Pendiente");
+            } else {
+                // Editar Cita
+                $("#txtIdCita").val(cita.CitaID);
+                $("#cboPaciente").val(cita.PacienteID);
+                $("#cboMedico").val(cita.MedicoID);
+                $("#txtFechaCita").val(formatearFechaInput(cita.FechaCita));
+
+                // Procesar la hora para el input time
+                let horaStr = cita.HoraCita && cita.HoraCita.Hours != undefined ?
+                            ("0" + cita.HoraCita.Hours).slice(-2) + ":" + ("0" + cita.HoraCita.Minutes).slice(-2) :
+                            (cita.HoraCita || "00:00");
+
+                // Si la hora viene de .NET como string ej "14:30:00", tomamos solo "14:30"
+                if(typeof horaStr === 'string' && horaStr.length > 5){
+                    horaStr = horaStr.substring(0, 5);
+                }
+
+                $("#txtHoraCita").val(horaStr);
+                $("#txtMotivo").val(cita.Motivo);
+                $("#txtObservaciones").val(cita.Observaciones);
+                $("#cboEstado").val(cita.Estado);
+            }
+            $('#modalCita').modal('show');
+        }
+
+        // FUNCION PARA GUARDAR CITA
+        function guardar() {
+            var request = {
+                CitaID: $("#txtIdCita").val(),
+                PacienteID: $("#cboPaciente").val(),
+                MedicoID: $("#cboMedico").val(),
+                FechaCita: $("#txtFechaCita").val(),
+                HoraCita: $("#txtHoraCita").val(),
+                Motivo: $("#txtMotivo").val(),
+                Observaciones: $("#txtObservaciones").val(),
+                Estado: $("#cboEstado").val()
+            };
+
+            // Validaciones básicas
+            if (!request.PacienteID || !request.MedicoID || !request.FechaCita) {
+                alert("Paciente, Médico y Fecha son obligatorios.");
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("Guardar", "Citas")',
+                type: "POST",
+                data: JSON.stringify(request),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.success) {
+                        $('#modalCita').modal('hide');
+                        cargarDatos(); // Recargar tabla
+                    } else {
+                        alert("Error: " + response.mensaje);
+                    }
+                }
+            });
+        }
+
+        // ABRIR MODAL PARA CAMBIO RÁPIDO DE ESTADO
+        function abrirModalEstado(idCita, pacienteNombre) {
+            $("#hiddenIdEstado").val(idCita);
+            $("#lblDetalleEstadoCita").text("Paciente: " + pacienteNombre);
+            $("#modalEstado").modal("show");
+        }
+
+        // EJECUTAR EL CAMBIO DE ESTADO
+        function ejecutarCambioEstado(nuevoEstado) {
+            var id = $("#hiddenIdEstado").val();
+
+            $.ajax({
+                url: '@Url.Action("CambiarEstado", "Citas")',
+                type: "POST",
+                data: { id: id, nuevoEstado: nuevoEstado },
+                success: function (response) {
+                    $("#modalEstado").modal("hide");
+                    if (response.success) {
+                        cargarDatos();
+                    } else {
+                        alert("Error: " + response.mensaje);
+                    }
+                }
+            });
+        }
+    </script>
+}
