@@ -24,6 +24,7 @@ namespace SaludPlus.Controllers
         {
             var pacientes = db.Pacientes
                 .Where(p => p.Activo == true)
+                .OrderBy(p => p.Apellidos)
                 .Select(p => new
                 {
                     p.PacienteID,

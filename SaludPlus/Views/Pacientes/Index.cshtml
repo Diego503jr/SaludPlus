@@ -2,191 +2,184 @@
     ViewBag.Title = "Gestión de Pacientes";
 }
 
-<link href="~/Content/styles/Admin.css" rel="stylesheet" />
+<link href="@Url.Content("~/Content/styles/Admin.css")" rel="stylesheet" />
 
-@* Estructura de tabla *@
+
+@* Cards presentación de pacientes *@
 <div class="container-fluid mt-4 px-4">
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-            <h5 id="tituloVista" class="fw-bold mb-0 text-dark text-center text-md-start">Listado de Pacientes</h5>
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white border-bottom-0 py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 rounded-top-4">
+            <h5 id="tituloVista" class="fw-bold mb-0 text-dark">Listado de Pacientes</h5>
 
             <div class="d-flex gap-2 justify-content-center">
-                <button class="btn btn-primary btn-sm px-3" onclick="abrirModal(null)">
+                <button id="btnAgregar" class="btn btn-primary btn-sm px-3 shadow-sm" onclick="abrirModal(null)">
                     <i class="bi bi-plus-lg me-1"></i> Agregar
                 </button>
                 <button class="btn btn-outline-secondary btn-sm px-3" onclick="cargarDatosHistorial()">
-                    <i class="fas fa-history me-1"></i> Historial 
+                    <i class="fas fa-history me-1"></i> Historial
                 </button>
-                <button class="btn btn-light btn-sm px-2 border shadow-sm" onclick="cargarDatos()" title="Siguiente">
+                <button class="btn btn-light btn-sm px-2 border shadow-sm" onclick="cargarDatos()" title="Refrescar">
                     <i class="fas fa-arrow-left text-primary"></i>
                 </button>
             </div>
         </div>
+    </div>
 
-        <div class="table-responsive">
-            <table class="table align-middle table-nowrap mb-0" id="tablaPacientes">
-                <thead class="table-light">
-                    <tr>
-                        <th class="ps-4 text-muted" style="width: 160px;">DUI</th>
-                        <th class="text-muted">Paciente</th>
-                        <th class="text-muted">Alergias</th>
-                        <th class="text-muted">Antecedentes</th>
-                        <th class="text-muted">Tipo de sangre </th>
-                        <th class="text-muted pe-4">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
+    <div class="row g-4" id="contenedorPacientes">
+        @* Llenado con AJAX*@
     </div>
 </div>
 
-@* Modal para registro/modificación de pacientes *@
-<div class="modal fade shadow-lg" id="modalPaciente" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content border-0 rounded-4">
-            <div class="modal-header bg-dark text-white py-3 px-4 rounded-top-4">
-                <h5 class="modal-title fw-bold" id="modalLabel">
-                    <i class="bi bi-person-plus-fill me-2"></i>Información del Paciente
-                </h5>
+@* Modal para registro/modificación Compacto e Inteligente *@
+<div class="modal fade" id="modalPaciente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+            <div class="modal-header bg-dark text-white border-0 py-3 px-4">
+                <h6 class="modal-title d-flex align-items-center fw-bold">
+                    <i class="bi bi-person-badge-fill me-2 fs-5"></i>
+                    INFORMACIÓN DE PACIENTE
+                </h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body p-4 bg-light-subtle">
-                <input type="hidden" id="txtIdPaciente" value="0" />
+            <div class="modal-body p-0">
+                @Html.Hidden("txtIdPaciente", "0")
 
-                <div class="row g-3">
-                    <div class="col-12"><small class="text-uppercase fw-bold text-muted" style="letter-spacing: 1px;">Identidad</small></div>
+                <div class="container-fluid py-4 px-4 bg-light-subtle">
+                    <div class="row g-2">
 
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Nombre</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-person"></i></span>
-                            <input type="text" id="txtNombre" class="form-control border-start-0 ps-0" placeholder="Ej. Juan Carlos" />
+                        @* --- SECCIÓN IDENTIDAD --- *@
+                        <div class="col-12 mb-1">
+                            <span class="badge bg-primary-subtle text-primary text-uppercase px-2" style="font-size: 0.65rem; letter-spacing: 1px;">Identidad</span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtNombre", null, new { @class = "form-control border-0 px-3", placeholder = "Nombre" })
+                                <label class="small text-muted"><i class="bi bi-person me-1"></i>Nombre</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtApellido", null, new { @class = "form-control border-0 px-3", placeholder = "Apellido" })
+                                <label class="small text-muted"><i class="bi bi-person me-1"></i>Apellido</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtDui", null, new { @class = "form-control border-0 px-3", placeholder = "DUI" })
+                                <label class="small text-muted"><i class="bi bi-card-text me-1"></i>DUI</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtFechaNac", null, new { @class = "form-control border-0 px-3", type = "date" })
+                                <label class="small text-muted"><i class="bi bi-calendar-event me-1"></i>Nacimiento</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 col-sm-12">
+                            <div class="form-floating shadow-sm">
+                                @Html.DropDownList("txtSexo", new List<SelectListItem> {
+                                    new SelectListItem { Text = "Masculino", Value = "M" },
+                                    new SelectListItem { Text = "Femenino", Value = "F" }
+                                }, "Seleccione...", new { @class = "form-select border-0 px-3" })
+                                <label class="small text-muted"><i class="bi bi-gender-ambiguous me-1"></i>Género</label>
+                            </div>
+                        </div>
+
+                        @* --- SECCIÓN CONTACTO --- *@
+                        <div class="col-12 mt-3 mb-1">
+                            <span class="badge bg-success-subtle text-success text-uppercase px-2" style="font-size: 0.65rem; letter-spacing: 1px;">Contacto</span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtTelefono", null, new { @class = "form-control border-0 px-3", type = "tel", placeholder = "Tel" })
+                                <label class="small text-muted"><i class="bi bi-telephone me-1"></i>Teléfono</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtEmail", null, new { @class = "form-control border-0 px-3", type = "email", placeholder = "Email" })
+                                <label class="small text-muted"><i class="bi bi-envelope me-1"></i>Email</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextArea("txtDireccion", null, new { @class = "form-control border-0 px-3", style = "height: 60px", placeholder = "Dirección" })
+                                <label class="small text-muted"><i class="bi bi-geo-alt me-1"></i>Dirección Completa</label>
+                            </div>
+                        </div>
+
+                        @* --- SECCIÓN CLÍNICA --- *@
+                        <div class="col-12 mt-3 mb-1 d-flex justify-content-between align-items-center">
+                            <span class="badge bg-danger-subtle text-danger text-uppercase px-2" style="font-size: 0.65rem; letter-spacing: 1px;">Expediente Médico</span>
+                            <div class="form-check form-switch small">
+                                <label class="form-check-label text-muted" for="txtActivo">Activo</label>
+                                <input class="form-check-input" type="checkbox" id="txtActivo" checked>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-floating shadow-sm">
+                                @Html.DropDownList("txtTipoSangre", new List<SelectListItem> {
+                                    new SelectListItem { Text = "O+", Value = "O+" }, new SelectListItem { Text = "O-", Value = "O-" },
+                                    new SelectListItem { Text = "A+", Value = "A+" }, new SelectListItem { Text = "A-", Value = "A-" },
+                                    new SelectListItem { Text = "B+", Value = "B+" }, new SelectListItem { Text = "B-", Value = "B-" },
+                                    new SelectListItem { Text = "AB+", Value = "AB+" }, new SelectListItem { Text = "AB-", Value = "AB-" }
+                                }, "---", new { @class = "form-select border-0 px-3" })
+                                <label class="small text-muted"><i class="bi bi-droplet me-1"></i>Sangre</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-9">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtAlergias", null, new { @class = "form-control border-0 px-3", placeholder = "Alergias" })
+                                <label class="small text-muted"><i class="bi bi-exclamation-triangle me-1"></i>Alergias conocidas</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextArea("txtAntecedentes", null, new { @class = "form-control border-0 px-3", style = "height: 60px", placeholder = "Antecedentes" })
+                                <label class="small text-muted"><i class="bi bi-journal-medical me-1"></i>Antecedentes relevantes</label>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Apellido</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-person"></i></span>
-                            <input type="text" id="txtApellido" class="form-control border-start-0 ps-0" placeholder="Ej. Pérez" />
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">DUI</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-card-text"></i></span>
-                            <input type="text" id="txtDui" class="form-control border-start-0 ps-0" placeholder="00000000-0" />
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Fecha de Nacimiento</label>
-                        <input type="date" id="txtFechaNac" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Sexo</label>
-                        <select id="txtSexo" class="form-select">
-                            <option value="">Seleccione Género</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Femenino</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Estado</label>
-                        <select id="txtActivo" class="form-select">
-                            <option value="">Estado</option>
-                            <option value="1">Activo</option>
-                            <option value="0">Inactivo</option>
-                        </select>
-                    </div>
-
-                    <div class="col-12 mt-4"><small class="text-uppercase fw-bold text-muted" style="letter-spacing: 1px;">Contacto</small></div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Teléfono</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-telephone"></i></span>
-                            <input type="tel" id="txtTelefono" class="form-control border-start-0 ps-0" placeholder="7000-0000" />
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Email</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-envelope"></i></span>
-                            <input type="email" id="txtEmail" class="form-control border-start-0 ps-0" placeholder="usuario@correo.com" />
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Dirección Residencial</label>
-                        <textarea id="txtDireccion" class="form-control" rows="2" placeholder="Ciudad, Municipio, Calle..."></textarea>
-                    </div>
-
-                    <div class="col-12 mt-4"><small class="text-uppercase fw-bold text-muted" style="letter-spacing: 1px;">Ficha Clínica</small></div>
-
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Tipo de sangre</label>
-                        <select id="txtTipoSangre" class="form-select">
-                            <option value="">Tipo</option>
-                            <option value="O+">O+</option>
-                            <option value="O-">O-</option>
-                            <option value="A+">A+</option>
-                            <option value="A-">A-</option>
-                            <option value="B+">B+</option>
-                            <option value="B-">B-</option>
-                            <option value="AB+">AB+</option>
-                            <option value="AB-">AB-</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-8">
-                        <label class="form-label small fw-semibold">Alergias Conocidas</label>
-                        <input type="text" id="txtAlergias" class="form-control" placeholder="Ej. Penicilina, ninguna..." />
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label small fw-semibold">Antecedentes Médicos</label>
-                        <textarea id="txtAntecedentes" class="form-control" rows="2" placeholder="Cirugías, enfermedades crónicas..."></textarea>
-                    </div>
-
                 </div>
             </div>
 
-            <div class="modal-footer bg-light border-0 py-3 rounded-bottom-4">
-                <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary px-4 fw-bold shadow-sm" onclick="guardar()">Guardar</button>
+            <div class="modal-footer bg-white border-0 py-3 px-4">
+                <button type="button" class="btn btn-link text-muted text-decoration-none fw-semibold" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success rounded-pill px-4 shadow-sm fw-bold" onclick="guardar()">
+                    <i class="bi bi-check2-circle me-1"></i> Guardar
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-@* Modal para ver detalles de paciente por ID *@
+
+@* Modal para ver detalles por ID *@
 <div class="modal fade" id="modalDetalles" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-
             <div class="modal-header bg-dark text-white py-2 px-3">
                 <h6 class="modal-title fw-bold small text-uppercase mb-0">Ficha de Urgencia</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body p-3">
                 <div class="row align-items-center mb-3 g-2">
                     <div class="col-8">
-                        <h4 class="fw-bold mb-0 text-dark">
-                            <span id="lblNombreCompleto"></span>
-
-                        </h4>
-                        <small class="text-muted fw-normal" style="font-size: 0.9rem;">
-                            No. <span id="lblIdPaciente"></span>
-                        </small>
+                        <h4 class="fw-bold mb-0 text-dark"><span id="lblNombreCompleto"></span></h4>
+                        <small class="text-muted fw-normal" style="font-size: 0.9rem;">No. <span id="lblIdPaciente"></span></small>
                         <div class="d-flex gap-2 align-items-center">
                             <span id="lblDui" class="badge bg-light text-dark border"></span>
                         </div>
@@ -196,7 +189,6 @@
                         <span id="lblTipoSangre" class="badge bg-danger fs-5 w-100 py-2"></span>
                     </div>
                 </div>
-
                 <div class="row g-2">
                     <div class="col-md-4">
                         <ul class="list-group list-group-flush border rounded-3 h-100">
@@ -207,7 +199,6 @@
                             <li class="list-group-item py-1 small"><strong>Ingreso:</strong> <span id="lblFechaRegistro"></span></li>
                         </ul>
                     </div>
-
                     <div class="col-md-4">
                         <ul class="list-group list-group-flush border rounded-3 h-100">
                             <li class="list-group-item py-1 bg-light small fw-bold text-muted text-uppercase">Contacto</li>
@@ -216,23 +207,16 @@
                             <li class="list-group-item py-1 small"><strong>Dirección:</strong> <p id="lblDireccion" class="mb-0 lh-sm" style="font-size: 0.75rem;"></p></li>
                         </ul>
                     </div>
-
                     <div class="col-md-4">
                         <div class="border rounded-3 h-100">
-                            <div class="p-2 bg-warning-subtle border-bottom small fw-bold text-warning-emphasis text-uppercase text-center">
-                                Alergias
-                            </div>
+                            <div class="p-2 bg-warning-subtle border-bottom small fw-bold text-warning-emphasis text-uppercase text-center">Alergias</div>
                             <div class="p-2 small text-dark" id="lblAlergias" style="min-height: 40px;"></div>
-
-                            <div class="p-2 bg-primary-subtle border-top border-bottom small fw-bold text-primary-emphasis text-uppercase text-center">
-                                Antecedentes
-                            </div>
+                            <div class="p-2 bg-primary-subtle border-top border-bottom small fw-bold text-primary-emphasis text-uppercase text-center">Antecedentes</div>
                             <div class="p-2 small text-dark" id="lblAntecedentes"></div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="modal-footer py-1 border-top-0">
                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
@@ -240,59 +224,53 @@
     </div>
 </div>
 
-@* Modal para confirmar eliminación *@
+@* Modal Eliminar *@
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-danger text-white py-2 px-3">
-                <h6 class="modal-title fw-bold small text-uppercase mb-0">Confirmar Baja de Paciente</h6>
+                <h6 class="modal-title fw-bold small text-uppercase mb-0">Confirmar Baja</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
-            <div class="modal-body p-4">
-                <div class="text-center mb-4">
-                    <i class="fas fa-exclamation-circle text-danger mb-2" style="font-size: 3rem;"></i>
-                    <h5 class="fw-bold text-dark">¿Desactivar este registro?</h5>
-                    <p class="text-muted small">El paciente dejará de aparecer en las listas activas del sistema.</p>
-                </div>
-
-                <div class="row g-0 border rounded-3 overflow-hidden shadow-sm">
-                    <div class="col-4 bg-light border-end p-3 text-center d-flex flex-column justify-content-center">
-                        <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">ID Paciente</small>
-                        <span class="h5 fw-bold text-dark mb-0" id="EliminarId"></span>
+            <div class="modal-body p-4 text-center">
+                <i class="fas fa-exclamation-circle text-danger mb-2" style="font-size: 3rem;"></i>
+                <h5 class="fw-bold text-dark">¿Desactivar este registro?</h5>
+                <p class="text-muted small">El paciente dejará de aparecer en las listas activas.</p>
+                <div class="row g-0 border rounded-3 text-start">
+                    <div class="col-4 bg-light border-end p-3 text-center">
+                        <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.7rem;">ID</small>
+                        <span class="h5 fw-bold text-dark" id="EliminarId"></span>
                     </div>
                     <div class="col-8 p-3 bg-white">
-                        <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Nombre Completo</small>
-                        <h6 class="fw-bold mb-2" id="EliminarNombre"></h6>
-
-                        <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem;">Documento DUI</small>
-                        <div class="d-block">
-                            <span id="EliminarDui" class="badge bg-light text-dark border fw-normal"></span>
-                        </div>
+                        <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.7rem;">Paciente</small>
+                        <h6 class="fw-bold" id="EliminarNombre"></h6>
+                        <span id="EliminarDui" class="badge bg-light text-dark border fw-normal"></span>
                     </div>
                 </div>
-
                 <input type="hidden" id="hiddenIdEliminar" />
             </div>
-
             <div class="modal-footer bg-light py-2 border-top-0 d-flex justify-content-between">
                 <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-sm btn-danger px-4 fw-bold shadow-sm" onclick="confirmarEliminar()">
-                    <i class="fas fa-user-minus me-1"></i> Confirmar Baja
-                </button>
+                <button type="button" class="btn btn-sm btn-danger px-4 fw-bold shadow-sm" onclick="confirmarEliminar()">Confirmar Baja</button>
             </div>
         </div>
     </div>
 </div>
 
-
 @section Scripts {
     <script>
+        // Declaración de rutas dinámicas mediante Razor
+        const UrlListar = '@Url.Action("Listar", "Pacientes")';
+        const UrlHistorial = '@Url.Action("ListarHistorial", "Pacientes")';
+        const UrlConsultar = '@Url.Action("Consultar", "Pacientes")';
+        const UrlGuardar = '@Url.Action("Guardar", "Pacientes")';
+        const UrlEliminar = '@Url.Action("Eliminar", "Pacientes")';
+
         $(document).ready(function () {
             cargarDatos();
         });
 
-        // Variable global de estado
+        //Variable global de estados
         let vistaActual = "ACTIVOS";
 
         // Formato DD/MM/YYYY Para listados
@@ -303,220 +281,185 @@
             var milisegundos = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
             var fecha = new Date(milisegundos);
 
-            var dia = ("0" + fecha.getDate()).slice(-2);
-            var mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
-            var anio = fecha.getFullYear();
-
-            return dia + "/" + mes + "/" + anio;
+            // Formato YYYY-MM-DD
+            return ("0" + fecha.getDate()).slice(-2) + "/" + ("0" + (fecha.getMonth() + 1)).slice(-2) + "/" + fecha.getFullYear();
         }
 
         // Función formato YYYY/MM/DD Para inputs
         function formatearFechaInput(fechaJson) {
             if (!fechaJson) return "";
-
             var milisegundos = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
             var fecha = new Date(milisegundos);
-
-            var dia = ("0" + fecha.getDate()).slice(-2);
-            var mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
-            var anio = fecha.getFullYear();
-
-            // Formato YYYY-MM-DD
-            return anio + "-" + mes + "-" + dia;
+            return fecha.getFullYear() + "-" + ("0" + (fecha.getMonth() + 1)).slice(-2) + "-" + ("0" + fecha.getDate()).slice(-2);
         }
 
         // Formato DD/MM/YYYY HH:MM Para fecha registro
         function formatearFechaHora(fechaJson) {
             if (!fechaJson) return "No registrada";
-
-            try {
-                var ms = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
-                if (isNaN(ms)) return "Fecha inválida";
-
-                var fecha = new Date(ms);
-                var dia = ("0" + fecha.getDate()).slice(-2);
-                var mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
-                var anio = fecha.getFullYear();
-                var horas = ("0" + fecha.getHours()).slice(-2);
-                var minutos = ("0" + fecha.getMinutes()).slice(-2);
-
-                return dia + "/" + mes + "/" + anio + " " + horas + ":" + minutos;
-            } catch (e) {
-                return "Error formato";
-            }
+            var ms = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
+            var fecha = new Date(ms);
+            return formatearFecha(fechaJson) + " " + ("0" + fecha.getHours()).slice(-2) + ":" + ("0" + fecha.getMinutes()).slice(-2);
         }
 
         // Función para mostrar texto según valor de sexo
         function formatearSexo(sexoJson) {
-            if (!sexoJson) return "";
-
-            var CharSexo = sexoJson ;
-
-            return CharSexo == "M"? "Masculino" : "Femenino";
+            return sexoJson === "M" ? "Masculino" : "Femenino";
         }
 
         // 1. FUNCION PARA LISTAR ACTIVOS
         function cargarDatos() {
-            $.ajax({
-                url: '@Url.Action("Listar", "Pacientes")',
-                type: "GET",
-                success: function (data) {
-                    var html = "";
-                    $.each(data, function (i, item) {
-                        var inicial = item.Nombres.charAt(0);
-
-                        html += "<tr>" +
-                            "<td class='ps-4 text-muted fw-medium'>" + (item.DUI || "0000") + "</td>" +
-
-                            "<td>" +
-                                "<div class='d-flex align-items-center'>" +
-                                    "<div class='rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center me-3' style='width: 35px; height: 35px; font-weight: 600; font-size: 0.85rem;'>" + inicial + "</div>" +
-                                    "<div>" +
-                                        "<h6 class='mb-0 fw-bold' style='font-size: 0.9rem;'>" + item.Nombres + " " + item.Apellidos + "</h6>" +
-                                    "</div>" +
-                                "</div>" +
-                            "</td>" +
-
-                            "<td><span class='text-muted' style='font-size: 0.85rem;'>" + (item.Alergias || "---") + "</span></td>" +
-
-                            "<td><span class='text-muted' style='font-size: 0.85rem;'>" + (item.AntecedentesMedicos || "---") + "</span></td>" +
-
-                            "<td><span class='badge bg-danger-subtle text-danger px-3 py-2 fw-bold' style='font-size: 0.75rem;'>" + (item.TipoSangre || "N/A") + "</span></td>" +
-
-                            "<td class=' pe-4'>" +
-                            "<div class='btn-group shadow-sm'>" +
-                            "<button class='btn btn-light btn-sm border-end' onclick='verDetalles(" + item.PacienteID + ")'><i class='bi bi-eye'></i></button>" +
-                            "<button class='btn btn-light btn-sm border-end text-primary' onclick='abrirModal(" + JSON.stringify(item).replace(/"/g, '&quot;') + ")'><i class='bi bi-pencil'></i></button>" +
-                            "<button class='btn btn-light btn-sm text-danger' onclick='eliminar(" + item.PacienteID + ")'><i class='bi bi-trash'></i></button>" +
-                            "</div>" +
-                            "</td>" +
-                            "</tr>";
-                    });
-                    $("#tablaPacientes tbody").html(html);
-                }
-            });
-
             vistaActual = "ACTIVOS";
+            $("#btnAgregar").prop("disabled", false);
             $("#tituloVista").text("Listado de Pacientes");
-            $.get("/Pacientes/Listar", function (data) {
-                llenarTabla(data);
+
+            $("#contenedorPacientes").html('<div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>');
+
+            $.get(UrlListar, function (data) {
+                llenarCards(data);
             });
         }
 
-
         // FUNCION PARA LISTAR INACTIVOS
         function cargarDatosHistorial() {
-            $.ajax({
-                url: '@Url.Action("ListarHistorial", "Pacientes")',
-                type: "GET",
-                success: function (data) {
-                    var html = "";
-                    $.each(data, function (i, item) {
-                        var btnEliminarDeshabilitado = !item.Activo ? "disabled" : "";
-                        var styleDeshabilitado = !item.Activo ? "pointer-events: none; opacity: 0.5;" : "";
-                        var inicial = item.Nombres.charAt(0);
-
-                        html += "<tr>" +
-                            "<td class='ps-4 text-muted fw-medium'>" + (item.DUI || "0000") + "</td>" +
-
-                            "<td>" +
-                                "<div class='d-flex align-items-center'>" +
-                                    "<div class='rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center me-3' style='width: 35px; height: 35px; font-weight: 600; font-size: 0.85rem;'>" + inicial + "</div>" +
-                                    "<div>" +
-                                        "<h6 class='mb-0 fw-bold' style='font-size: 0.9rem;'>" + item.Nombres + " " + item.Apellidos + "</h6>" +
-                                    "</div>" +
-                                "</div>" +
-                            "</td>" +
-
-                            "<td><span class='text-muted' style='font-size: 0.85rem;'>" + (item.Alergias || "---") + "</span></td>" +
-
-                            "<td><span class='text-muted' style='font-size: 0.85rem;'>" + (item.AntecedentesMedicos || "---") + "</span></td>" +
-
-                            "<td><span class='badge bg-danger-subtle text-danger px-3 py-2 fw-bold' style='font-size: 0.75rem;'>" + (item.TipoSangre || "N/A") + "</span></td>" +
-
-                            "<td class=' pe-4'>" +
-                            "<div class='btn-group shadow-sm'>" +
-                            "<button class='btn btn-light btn-sm border-end' onclick='verDetalles(" + item.PacienteID + ")'><i class='bi bi-eye'></i></button>" +
-                            "<button class='btn btn-light btn-sm border-end text-primary' onclick='abrirModal(" + JSON.stringify(item).replace(/"/g, '&quot;') + ")'><i class='bi bi-pencil'></i></button>" +
-                            "<button class='btn btn-light btn-sm text-danger " + btnEliminarDeshabilitado + "' " +
-                            "style='" + styleDeshabilitado + "' " +
-                            "onclick='eliminar(" + item.PacienteID + ")' " + btnEliminarDeshabilitado + ">" +
-                            "<i class='bi bi-trash'></i>" +
-                            "</button>" +
-                            "</div>" +
-                            "</td>" +
-                            "</tr>";
-                    });
-                    $("#tablaPacientes tbody").html(html);
-                }
-            });
-
             vistaActual = "HISTORIAL";
-            $("#tituloVista").text("Historial de Pacientes (Inactivos)");
-            $.get("/Pacientes/ListarHistorial", function (data) {
-                llenarTabla(data);
+            $("#btnAgregar").prop("disabled", true);
+            $("#tituloVista").text("Historial de Pacientes");
+
+            $("#contenedorPacientes").html('<div class="col-12 text-center py-5"><div class="spinner-border text-secondary"></div></div>');
+
+            $.get(UrlHistorial, function (data) {
+                llenarCards(data);
             });
+        }
+
+        // LLENADO DE CARDS CON INFORMACIÓN
+        function llenarCards(data) {
+            var html = "";
+
+            $("#contenedorPacientes").empty();
+
+            if (!data || data.length === 0) {
+                html = `
+                <div class="col-12 text-center py-5">
+                    <div class="display-1 text-muted opacity-25"><i class="bi bi-people"></i></div>
+                    <h6 class="text-muted mt-3 py-3 px-4 border rounded-pill d-inline-block bg-white shadow-sm">
+                        No se encontraron pacientes en esta sección.
+                    </h6>
+                </div>`;
+            } else {
+                $.each(data, function (i, item) {
+                    var inicial = item.Nombres ? item.Nombres.charAt(0) : "?";
+                    var itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+
+                    var esActivo = item.Activo;
+                    var deshabilitado = !esActivo ? "disabled" : "";
+
+                    html += `
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card h-100 rounded-4 transition-hover overflow-hidden" style="background-color: #fdfdfd;">
+                            <div class="card-body p-4 position-relative">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center me-3 shadow-inner" style="width: 58px; height: 58px; font-weight: 700; font-size: 1.6rem;">
+                                        ${inicial}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0 fw-bold text-dark text-truncate">${item.Apellidos}</h6>
+                                        <h6 class="mb-0 fw-bold text-dark text-truncate">${item.Nombres}</h6>
+                                        <small class="text-muted d-block text-truncate">
+                                            <i class="bi bi-card-text me-1"></i>DUI: ${item.DUI || "N/A"}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="position-absolute top-0 end-0 mt-3 me-3">
+                                    <span class="badge bg-danger border shadow-sm px-2 py-1">${item.TipoSangre || "N/A"}</span>
+                                </div>
+                                <div class="d-flex flex-row justify-content-between align-items-center gap-2">
+                                    <div class="d-flex align-items-start flex-fill w-50">
+                                        <div class="me-2 mt-1 fs-5 text-warning">
+                                           <i class="bi bi-patch-exclamation"></i>
+                                        </div>
+                                        <div class="text-truncate">
+                                            <small class="d-block text-muted fw-semibold text-uppercase" style="font-size: 0.7rem;">Alergias</small>
+                                            <span class="small text-dark d-block fw-medium text-truncate" title="${item.Alergias || 'Sin registro'}">
+                                                ${item.Alergias || "Sin registro"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-start flex-fill w-50">
+                                        <div class="me-2 mt-1 fs-5 text-primary">
+                                            <i class="bi bi-clipboard-pulse"></i>
+                                        </div>
+                                        <div class="text-truncate">
+                                            <small class="d-block text-muted fw-semibold text-uppercase" style="font-size: 0.7rem;">Antecedentes</small>
+                                            <span class="small text-dark d-block fw-medium text-truncate" title="${item.AntecedentesMedicos || 'Sin registro'}">
+                                                ${item.AntecedentesMedicos || "Sin registro"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-light border-0 px-4 py-3 d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-light btn-sm border shadow-sm rounded-pill" onclick='verDetalles(${item.PacienteID})'><i class="bi bi-eye"></i></button>
+                                    <button class="btn btn-light btn-sm text-primary border shadow-sm rounded-pill" onclick='abrirModal(${itemJson})'><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-light btn-sm text-danger border shadow-sm rounded-pill ${deshabilitado}" onclick='eliminar(${item.PacienteID})' ${deshabilitado}><i class="bi bi-trash"></i></button>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle ${esActivo ? 'bg-success' : 'bg-danger'}" style="width: 10px; height: 10px;"></div>
+                                    <span class="ms-2 small fw-bold ${esActivo ? 'text-success' : 'text-danger'} text-uppercase" style="font-size: 0.75rem;">
+                                        ${esActivo ? "Activo" : "Inactivo"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            }
+            $("#contenedor_p").html(html);
+            $("#contenedorPacientes").html(html);
         }
 
         // FUNCIÓN PARA VER DETALLES DE PACIENTES POR ID
         function verDetalles(id) {
-            $.ajax({
-                url: "/Pacientes/Consultar?id=" + id,
-                type: "GET",
-                dataType: "json",
-                success: function (response) {
-                    if (response.success) {
-                        var p = response.data;
-
-                        $("#lblNombreCompleto").text(p.Nombres + " " + p.Apellidos);
-                        $("#lblDui").text(p.DUI);
-                        $("#lblFechaNac").text(formatearFecha(p.FechaNacimiento));
-                        $("#lblSexo").text(formatearSexo(p.Sexo));
-                        $("#lblEstado").html(p.Activo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>');
-
-                        $("#lblTelefono").text(p.Telefono || "No registrado");
-                        $("#lblEmail").text(p.Email || "No registrado");
-                        $("#lblDireccion").text(p.Direccion || "No registrada");
-
-                        $("#lblTipoSangre").text(p.TipoSangre || "No registrado");
-                        $("#lblFechaRegistro").text(formatearFechaHora(p.FechaRegistro));
-                        $("#lblAlergias").text(p.Alergias || "Ninguna registrada");
-                        $("#lblAntecedentes").text(p.AntecedentesMedicos || "Sin antecedentes");
-                        $("#lblIdPaciente").text(p.PacienteID);
-
-                        // Mostrar el modal
-                        $("#modalDetalles").modal("show");
-                    } else {
-                        alert(response.mensaje);
-                    }
-                },
-                error: function () {
-                    alert("Error al cargar los detalles del paciente");
+            $.get(UrlConsultar, { id: id }, function (response) {
+                if (response.success) {
+                    var p = response.data;
+                    $("#lblNombreCompleto").text(p.Nombres + " " + p.Apellidos);
+                    $("#lblDui").text(p.DUI);
+                    $("#lblFechaNac").text(formatearFecha(p.FechaNacimiento));
+                    $("#lblSexo").text(formatearSexo(p.Sexo));
+                    $("#lblEstado").html(p.Activo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>');
+                    $("#lblTelefono").text(p.Telefono || "No registrado");
+                    $("#lblEmail").text(p.Email || "No registrado");
+                    $("#lblDireccion").text(p.Direccion || "No registrada");
+                    $("#lblTipoSangre").text(p.TipoSangre || "No registrado");
+                    $("#lblFechaRegistro").text(formatearFechaHora(p.FechaRegistro));
+                    $("#lblAlergias").text(p.Alergias || "Ninguna registrada");
+                    $("#lblAntecedentes").text(p.AntecedentesMedicos || "Sin antecedentes");
+                    $("#lblIdPaciente").text(p.PacienteID);
+                    $("#modalDetalles").modal("show");
                 }
             });
         }
 
         // FUNCION PARA ABRIR EL MODAL (CREAR/MODIFICAR)
         function abrirModal(paciente) {
-            $("#modalPaciente").find(".modal-body input, .modal-body select, .modal-body textarea").prop("disabled", false);
-            if (paciente == null) {
-                // Es un paciente nuevo, limpiamos los campos
-                $("#txtIdPaciente").val(0);
-                $("#txtNombre").val("");
-                $("#txtApellido").val("");
-                $("#txtDui").val("");
-                $("#txtFechaNac").val("");
-                $("#txtSexo").val("");
-                $("#txtTelefono").val("");
-                $("#txtEmail").val("");
-                $("#txtDireccion").val("");
-                $("#txtTipoSangre").val("");
-                $("#txtAlergias").val("");
-                $("#txtActivo").val("1");
-                $("#txtAntecedentes").val("");
+            const $modal = $("#modalPaciente");
+            $modal.find("input, select, textarea").prop("disabled", false);
+            $("#txtActivo").removeClass("opacity-50");
 
+            if (paciente == null) {
+                $("#txtIdPaciente").val(0);
+                $modal.find("input:not([type=hidden]), textarea").val("");
+                $("#txtSexo, #txtTipoSangre").val("");
+                $("#txtActivo")
+                    .prop("checked", true)      
+                    .prop("disabled", true)     
+                    .addClass("opacity-50");   
+            
             } else {
-                // --- EDITAR / REACTIVAR ---
+                $("#txtActivo").prop("disabled", false);
+
                 $("#txtIdPaciente").val(paciente.PacienteID);
                 $("#txtNombre").val(paciente.Nombres);
                 $("#txtApellido").val(paciente.Apellidos);
@@ -529,20 +472,15 @@
                 $("#txtTipoSangre").val(paciente.TipoSangre);
                 $("#txtAlergias").val(paciente.Alergias);
                 $("#txtAntecedentes").val(paciente.AntecedentesMedicos);
+                $("#txtActivo").prop("checked", paciente.Activo);
 
-                $("#txtActivo").val(paciente.Activo ? "1" : "0");
-
-                if (paciente.Activo == false) {
-                    $("#modalPaciente").find(".modal-body input, .modal-body select, .modal-body textarea")
+                if (!paciente.Activo) {
+                    $modal.find(".modal-body input:not(#txtActivo), .modal-body select, .modal-body textarea")
                         .prop("disabled", true);
-
-                    $("#txtActivo").prop("disabled", false);
                 }
-
             }
-            $('#modalPaciente').modal('show');
+            $modal.modal('show');
         }
-
 
         // FUNCION PARA GUARDAR (CREAR/MODIFICAR)
         function guardar() {
@@ -559,75 +497,47 @@
                 TipoSangre: $("#txtTipoSangre").val(),
                 Alergias: $("#txtAlergias").val(),
                 AntecedentesMedicos: $("#txtAntecedentes").val(),
-                Activo: $("#txtActivo").val() === "1" ? true : false
+                Activo: $("#txtActivo").is(":checked")
             };
 
             $.ajax({
-                url: '@Url.Action("Guardar", "Pacientes")',
+                url: UrlGuardar,
                 type: "POST",
                 data: JSON.stringify(request),
                 contentType: "application/json; charset=utf-8",
-                dataType: "json",
                 success: function (response) {
                     if (response.success) {
                         $('#modalPaciente').modal('hide');
-                        // RECARGA SEGÚN LA VISTA
-                        if (vistaActual === "HISTORIAL") {
-                            cargarDatosHistorial();
-                        } else {
-                            cargarDatos();
-                        }
+                        vistaActual === "HISTORIAL" ? cargarDatosHistorial() : cargarDatos();
                     } else {
                         alert("Error: " + response.message);
                     }
                 }
             });
         }
+
+        //FUNCIÓN PARA OBTENER DATOS DE PACIENTE A ELIMINAR
         function eliminar(id) {
-            $.ajax({
-                url: "/Pacientes/Consultar?id=" + id,
-                type: "GET",
-                dataType: "json",
-                success: function (response) {
-                    if (response.success) {
-                        var p = response.data;
-
-                        $("#EliminarNombre").text(p.Nombres + " " + p.Apellidos);
-                        $("#EliminarDui").text(p.DUI);
-                        $("#EliminarId").text(p.PacienteID);
-
-                        $("#hiddenIdEliminar").val(p.PacienteID);
-
-                        $("#modalEliminar").modal("show");
-                    } else {
-                        alert("Error: " + response.mensaje);
-                    }
-                },
-                error: function () {
-                    alert("Error al obtener los datos del paciente");
+            $.get(UrlConsultar, { id: id }, function (response) {
+                if (response.success) {
+                    var p = response.data;
+                    $("#EliminarNombre").text(p.Nombres + " " + p.Apellidos);
+                    $("#EliminarDui").text(p.DUI);
+                    $("#EliminarId").text(p.PacienteID);
+                    $("#hiddenIdEliminar").val(p.PacienteID);
+                    $("#modalEliminar").modal("show");
                 }
             });
         }
 
+        //FUNCIÓN PARA ELIMINAR/DESACTIVAR PACIENTE (Eliminar lógico)
         function confirmarEliminar() {
             var id = $("#hiddenIdEliminar").val();
-
-            $.ajax({
-                url: '@Url.Action("Eliminar", "Pacientes")',
-                type: "POST",
-                data: { id: id },
-                success: function (response) {
-                    $("#modalEliminar").modal("hide");
-
-                    if (response.success) {
-                        if (typeof cargarDatos === 'function') cargarDatos();
-                    } else {
-                        alert("Error al eliminar: " + response.mensaje);
-                    }
-                }
+            $.post(UrlEliminar, { id: id }, function (response) {
+                $("#modalEliminar").modal("hide");
+                if (response.success) cargarDatos();
+                else alert("Error: " + response.mensaje);
             });
         }
-
     </script>
 }
-
