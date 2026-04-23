@@ -60,3 +60,14 @@
 #modalPaciente .badge {
     font-weight: 800;
 }
+
+/*CHECK DISPONIBILIDAD MÉDICO*/
+#chkActivo:checked {
+    background-color: #198754; /* Verde */
+    border-color: #198754;
+}
+
+#chkActivo {
+    background-color: #dc3545; /* Rojo */
+    border-color: #dc3545;
+}

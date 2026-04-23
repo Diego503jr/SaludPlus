@@ -132,6 +132,7 @@
     <Compile Include="Controllers\CitasController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
+    <Compile Include="Controllers\MedicosController.cs" />
     <Compile Include="Controllers\PacientesController.cs" />
     <Compile Include="Filters\VerificarSesion.cs" />
     <Compile Include="Global.asax.cs">
@@ -220,7 +221,6 @@
       <DependentUpon>SaludPlusModel.edmx</DependentUpon>
       <LastGenOutput>SaludPlusModel.cs</LastGenOutput>
     </Content>
-    <Content Include="Scripts\App\pacientest.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -262,6 +262,7 @@
     <Content Include="Views\Pacientes\Index.cshtml" />
     <Content Include="Views\Login\Login.cshtml" />
     <Content Include="Views\Citas\Index.cshtml" />
+    <Content Include="Views\Medicos\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
