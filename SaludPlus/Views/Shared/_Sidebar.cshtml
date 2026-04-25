@@ -40,14 +40,14 @@
         }
         else if (nombreRol == "Medico")
         {
+            <a href="@Url.Action("Index", "Consultas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
+                <i class="fas fa-stethoscope me-2"></i> Mis Consultas
+            </a>
             <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
                 <i class="fas fa-calendar-check me-2"></i> Mis Citas
             </a>
             <a href="@Url.Action("Calendario", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
                 <i class="fas fa-calendar-alt me-2"></i> Calendario
-            </a>
-            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-user-md me-2"></i> Citas
             </a>
         }
         else if (nombreRol == "Recepcionista")

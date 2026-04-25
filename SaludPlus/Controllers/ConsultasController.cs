@@ -17,6 +17,35 @@ namespace SaludPlus.Controllers
             return View();
         }
 
+        // GET: Consultas/Ficha
+        public ActionResult Ficha(int? citaId, int? consultaId)
+        {
+            ViewBag.CitaID = citaId ?? 0;
+            ViewBag.ConsultaID = consultaId ?? 0;
+            ViewBag.PacienteNombre = "Paciente Desconocido"; // Valor por defecto
+
+            // Si estamos abriendo una consulta que ya existe
+            if (consultaId.HasValue && consultaId > 0)
+            {
+                var consulta = db.Consultas.Include(c => c.Pacientes).FirstOrDefault(c => c.ConsultaID == consultaId);
+                if (consulta != null)
+                {
+                    ViewBag.PacienteNombre = consulta.Pacientes.Nombres + " " + consulta.Pacientes.Apellidos;
+                }
+            }
+            // Si estamos creando una consulta nueva a partir de una cita
+            else if (citaId.HasValue && citaId > 0)
+            {
+                var cita = db.Citas.Include(c => c.Pacientes).FirstOrDefault(c => c.CitaID == citaId);
+                if (cita != null)
+                {
+                    ViewBag.PacienteNombre = cita.Pacientes.Nombres + " " + cita.Pacientes.Apellidos;
+                }
+            }
+
+            return View();
+        }
+
         // LISTAR CONSULTAS (Historial clínico general o filtrado por médico)
         public JsonResult Listar()
         {
@@ -31,7 +60,7 @@ namespace SaludPlus.Controllers
                     c.MotivoConsulta,
                     c.Diagnostico
                 })
-                .OrderByDescending(c => c.FechaConsulta) // Ordenar de la más reciente a la más antigua
+                .OrderByDescending(c => c.FechaConsulta) 
                 .ToList();
 
             return Json(consultas, JsonRequestBehavior.AllowGet);
@@ -73,26 +102,39 @@ namespace SaludPlus.Controllers
         [HttpPost]
         public JsonResult Guardar(Consultas obj)
         {
-            using (var transaction = db.Database.BeginTransaction()) 
+            using (var transaction = db.Database.BeginTransaction())
             {
                 try
                 {
                     if (obj.ConsultaID == 0)
                     {
-                        // 1. NUEVA CONSULTA
-                        obj.FechaConsulta = DateTime.Now;
-                        db.Consultas.Add(obj);
+                        bool existeConsulta = db.Consultas.Any(c => c.CitaID == obj.CitaID);
+                        if (existeConsulta)
+                        {
+                            return Json(new { success = false, mensaje = "Esta cita ya tiene un expediente médico guardado. No se pueden crear consultas duplicadas para la misma cita." });
+                        }
 
-                        // 2. LÓGICA DE NEGOCIO: Actualizar la cita relacionada
+         
+                        obj.FechaConsulta = DateTime.Now;
+
+                        // Extramos IDs obligatorios y actualizar la cita relacionada
                         if (obj.CitaID != null)
                         {
                             var citaRelacionada = db.Citas.Find(obj.CitaID);
                             if (citaRelacionada != null)
                             {
+                                // Le pasamos a la nueva consulta el Paciente y el Médico que estaban en la cita
+                                obj.PacienteID = citaRelacionada.PacienteID;
+                                obj.MedicoID = citaRelacionada.MedicoID;
+
+                                // Cambiamos el estado de la Cita
                                 citaRelacionada.Estado = "Completada";
                                 db.Entry(citaRelacionada).State = EntityState.Modified;
                             }
                         }
+
+                        // Agregamos la consulta a la base de datos ya con todos sus FKs completos
+                        db.Consultas.Add(obj);
                     }
                     else
                     {
@@ -112,23 +154,28 @@ namespace SaludPlus.Controllers
                         data.PresionArterial = obj.PresionArterial;
                         data.Temperatura = obj.Temperatura;
                         data.ProximaRevision = obj.ProximaRevision;
-                        // Nota: Generalmente no se permite cambiar el paciente, médico o cita origen una vez creada.
                     }
 
                     db.SaveChanges();
-                    transaction.Commit(); // Confirmamos que todo se guardó bien (Consulta y Cita)
+                    transaction.Commit(); // Confirmamos que todo se guardó bien 
 
                     return Json(new { success = true });
                 }
                 catch (Exception ex)
                 {
                     transaction.Rollback(); // Si hay error, deshacemos todo para no dejar datos corruptos
-                    return Json(new { success = false, mensaje = ex.Message });
+
+                    // Extraer el error real de SQL en lugar del error genérico de Entity Framework
+                    string errorReal = ex.InnerException != null ?
+                                      (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message)
+                                      : ex.Message;
+
+                    return Json(new { success = false, mensaje = errorReal });
                 }
             }
         }
 
-        // OBTENER CITAS PENDIENTES DEL DÍA (Para que el médico elija a quién atender)
+        // OBTENER CITAS PENDIENTES DEL DÍA 
         [HttpGet]
         public JsonResult ObtenerCitasPendientes()
         {

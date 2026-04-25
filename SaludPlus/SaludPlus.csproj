@@ -265,6 +265,8 @@
     <Content Include="Views\Citas\Index.cshtml" />
     <Content Include="Views\Medicos\Index.cshtml" />
     <Content Include="Views\Consultas\Index.cshtml" />
+    <Content Include="Views\Consultas\Ficha.cshtml" />
+    <Content Include="Views\Citas\Calendario.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

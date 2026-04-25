@@ -1,0 +1,51 @@
+﻿@{
+    ViewBag.Title = "Calendario Médico";
+}
+
+<div class="container-fluid mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-dark"><i class="fas fa-calendar-alt text-primary me-2"></i> Mi Agenda Visual</h4>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <div id='calendarioMedico'></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/&#64;fullcalendar/core@6.1.11/locales/es.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendarioMedico');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth', // Vista de mes por defecto
+                locale: 'es', // Idioma español
+                themeSystem: 'bootstrap5',
+
+                // Opciones de la barra superior
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay' // Botones para ver por Mes, Semana o Día
+                },
+
+                // Le decimos de dónde sacar los datos
+                events: '@Url.Action("ObtenerEventosCalendario", "Citas")',
+
+                // Qué hacer cuando el médico le da clic a una cita en el calendario
+                eventClick: function(info) {
+                    alert('Paciente: ' + info.event.title + '\nFecha y Hora: ' + info.event.start.toLocaleString());
+                }
+            });
+
+            // Renderizamos el calendario en pantalla
+            calendar.render();
+        });
+    </script>
+}

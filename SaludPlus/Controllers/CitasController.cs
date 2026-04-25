@@ -17,6 +17,12 @@ namespace SaludPlus.Controllers
             return View();
         }
 
+        // GET: Citas/Calendario (La nueva vista visual)
+        public ActionResult Calendario()
+        {
+            return View();
+        }
+
         // LISTAR CITAS 
         public JsonResult Listar()
         {
@@ -165,6 +171,35 @@ namespace SaludPlus.Controllers
                 }).ToList();
             return Json(medicos, JsonRequestBehavior.AllowGet);
         }
+        // =======================================================
+        // ENDPOINT PARA LLENAR FULLCALENDAR
+        // =======================================================
+        [HttpGet]
+        public JsonResult ObtenerEventosCalendario()
+        {
+            // 1. Traemos las citas activas de la base de datos a memoria
+            var citas = db.Citas
+                .Where(c => c.Estado != "Cancelada") // Ocultamos las canceladas
+                .ToList();
 
+            // 2. Las mapeamos al formato exacto que pide FullCalendar
+            var eventos = citas.Select(c => new
+            {
+                id = c.CitaID,
+                title = c.Pacientes.Nombres + " " + c.Pacientes.Apellidos,
+                start = c.FechaCita.ToString("yyyy-MM-dd") + "T" + c.HoraCita.ToString(@"hh\:mm\:ss"),
+
+                // Asignamos colores de Bootstrap dependiendo del estado
+                color = c.Estado == "Confirmada" ? "#198754" :
+                        c.Estado == "Pendiente" ? "#ffc107" :  
+                        c.Estado == "Completada" ? "#0dcaf0" : 
+                        "#6c757d",
+                textColor = c.Estado == "Pendiente" ? "#000" : "#fff",
+
+                allDay = false
+            }).ToList();
+
+            return Json(eventos, JsonRequestBehavior.AllowGet);
+        }
     }
 }

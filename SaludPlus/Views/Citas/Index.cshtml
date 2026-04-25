@@ -186,7 +186,7 @@
             });
         }
 
-        // 1. FUNCION PARA LISTAR CITAS
+       // 1. FUNCION PARA LISTAR CITAS
         function cargarDatos() {
             $.ajax({
                 url: '@Url.Action("Listar", "Citas")',
@@ -195,17 +195,29 @@
                     var html = "";
                     $.each(data, function (i, item) {
 
-                        // Formato visual para el Estado
                         let badgeColor = "bg-secondary";
                         if(item.Estado === "Confirmada") badgeColor = "bg-success";
                         if(item.Estado === "Pendiente") badgeColor = "bg-warning text-dark";
                         if(item.Estado === "Cancelada") badgeColor = "bg-danger";
                         if(item.Estado === "Completada") badgeColor = "bg-info text-dark";
 
-                        // Formatear Hora (asumiendo que viene como objeto de TimeSpan o string, ajustamos para mostrar)
                         let horaStr = item.HoraCita && item.HoraCita.Hours != undefined ?
                             ("0" + item.HoraCita.Hours).slice(-2) + ":" + ("0" + item.HoraCita.Minutes).slice(-2) :
                             (item.HoraCita || "00:00");
+
+                        //Deshabilitar botones si ya finalizó ---
+                        let botonesAccion = "";
+                        if (item.Estado === "Completada" || item.Estado === "Cancelada") {
+                            // Botones bloqueados (grises y sin evento onclick)
+                            botonesAccion =
+                                "<button class='btn btn-light btn-sm border-end text-muted' title='Cita bloqueada' disabled><i class='bi bi-pencil'></i></button>" +
+                                "<button class='btn btn-light btn-sm text-muted' title='Estado finalizado' disabled><i class='bi bi-gear'></i></button>";
+                        } else {
+                            // Botones normales habilitados
+                            botonesAccion =
+                                "<button class='btn btn-light btn-sm border-end text-primary' title='Editar' onclick='abrirModal(" + JSON.stringify(item).replace(/"/g, '&quot;') + ")'><i class='bi bi-pencil'></i></button>" +
+                                "<button class='btn btn-light btn-sm text-dark' title='Cambiar Estado' onclick='abrirModalEstado(" + item.CitaID + ", \"" + item.PacienteNombre + "\")'><i class='bi bi-gear'></i></button>";
+                        }
 
                         html += "<tr>" +
                             "<td class='ps-4'>" +
@@ -218,8 +230,7 @@
                             "<td><span class='badge " + badgeColor + " px-3 py-2 fw-bold' style='font-size: 0.75rem;'>" + item.Estado + "</span></td>" +
                             "<td class='pe-4 text-center'>" +
                                 "<div class='btn-group shadow-sm'>" +
-                                    "<button class='btn btn-light btn-sm border-end text-primary' title='Editar' onclick='abrirModal(" + JSON.stringify(item).replace(/"/g, '&quot;') + ")'><i class='bi bi-pencil'></i></button>" +
-                                    "<button class='btn btn-light btn-sm text-dark' title='Cambiar Estado' onclick='abrirModalEstado(" + item.CitaID + ", \"" + item.PacienteNombre + "\")'><i class='bi bi-gear'></i></button>" +
+                                    botonesAccion + // Insertamos los botones dinámicos aquí
                                 "</div>" +
                             "</td>" +
                             "</tr>";
