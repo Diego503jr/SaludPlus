@@ -17,7 +17,7 @@ namespace SaludPlus.Controllers
             return View();
         }
 
-        // LISTAR CITAS (Cruza datos para obtener nombres reales en lugar de solo IDs)
+        // LISTAR CITAS 
         public JsonResult Listar()
         {
             var citas = db.Citas
@@ -28,7 +28,6 @@ namespace SaludPlus.Controllers
                     // Concatenamos Nombres y Apellidos del Paciente
                     PacienteNombre = c.Pacientes.Nombres + " " + c.Pacientes.Apellidos,
                     MedicoID = c.MedicoID,
-                    // Según tu diagrama ERD, el nombre del médico está en la tabla Usuarios
                     MedicoNombre = c.Medicos.Usuarios.Nombres + " " + c.Medicos.Usuarios.Apellidos,
                     c.FechaCita,
                     c.HoraCita,
@@ -117,7 +116,6 @@ namespace SaludPlus.Controllers
         }
 
         // CAMBIAR ESTADO (Confirmar, Cancelar)
-        // Esto cumple tu requerimiento de "agendar, confirmar, cancelar" del Bloque B
         [HttpPost]
         public JsonResult CambiarEstado(int id, string nuevoEstado)
         {
