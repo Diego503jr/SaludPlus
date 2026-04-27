@@ -39,14 +39,19 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <label class="form-label fw-bold text-muted small">Pacientes en Sala de Espera:</label>
+                <label class="form-label fw-bold text-muted small">Pacientes en Sala de Espera (Hoy):</label>
                 <select id="cboCitaPendiente" class="form-select form-select-lg shadow-sm border-primary">
                     <option value="">-- Seleccione una cita --</option>
                 </select>
+                <div id="msjSinPacientes" class="text-danger small mt-2 d-none">
+                    <i class="fas fa-info-circle me-1"></i> No hay pacientes agendados para el día de hoy.
+                </div>
             </div>
             <div class="modal-footer bg-light border-0">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-success fw-bold" onclick="iniciarConsultaFicha()">Proceder a Consulta <i class="fas fa-arrow-right ms-1"></i></button>
+                <button type="button" class="btn btn-success fw-bold" id="btnProceder" onclick="iniciarConsultaFicha()">
+                    Proceder a Consulta <i class="fas fa-arrow-right ms-1"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -58,21 +63,29 @@
             cargarDatos();
         });
 
+        // Formateador de fecha con hora (Igual al que usamos en Farmacia)
         function formatearFecha(fechaJson) {
             if (!fechaJson) return "";
             var ms = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
             var d = new Date(ms);
-            return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear();
+            return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear() + " " +
+                   ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
         }
 
         function cargarDatos() {
             $.get('@Url.Action("Listar", "Consultas")', function (data) {
                 var html = "";
+
+                // Validación de Estado Vacío en la tabla
+                if(data.length === 0) {
+                    html = "<tr><td colspan='5' class='text-center py-4 text-muted'><i class='fas fa-folder-open fs-4 d-block mb-2 text-light'></i>No hay consultas registradas en el historial.</td></tr>";
+                }
+
                 $.each(data, function (i, item) {
                     html += `<tr>
                         <td class='ps-4 fw-bold'>${formatearFecha(item.FechaConsulta)}</td>
-                        <td><h6 class='mb-0 fw-bold'>${item.PacienteNombre}</h6></td>
-                        <td><span class='text-muted'><i class='fas fa-user-md'></i> Dr. ${item.MedicoNombre}</span></td>
+                        <td><h6 class='mb-0 fw-bold text-dark'>${item.PacienteNombre}</h6></td>
+                        <td><span class='text-muted small'><i class='fas fa-user-md me-1'></i>Dr. ${item.MedicoNombre}</span></td>
                         <td><span class='badge bg-info-subtle text-info-emphasis px-2 py-1'>${item.Diagnostico || "Pendiente"}</span></td>
                         <td class='text-center'>
                             <a href='/Consultas/Ficha?consultaId=${item.ConsultaID}' class='btn btn-light btn-sm text-primary shadow-sm border'>
@@ -88,7 +101,23 @@
         function abrirModalSeleccion() {
             $.get('@Url.Action("ObtenerCitasPendientes", "Consultas")', function (data) {
                 let html = '<option value="">-- Seleccione una cita --</option>';
-                $.each(data, function (i, item) { html += `<option value="${item.Id}">${item.Texto}</option>`; });
+
+                // Si no hay citas para hoy, bloqueamos los controles
+                if (data.length === 0) {
+                    $("#cboCitaPendiente").prop("disabled", true);
+                    $("#btnProceder").prop("disabled", true);
+                    $("#msjSinPacientes").removeClass("d-none");
+                } else {
+                    // Si hay citas, habilitamos todo
+                    $("#cboCitaPendiente").prop("disabled", false);
+                    $("#btnProceder").prop("disabled", false);
+                    $("#msjSinPacientes").addClass("d-none");
+
+                    $.each(data, function (i, item) {
+                        html += `<option value="${item.Id}">${item.Texto}</option>`;
+                    });
+                }
+
                 $("#cboCitaPendiente").html(html);
                 $('#modalSeleccion').modal('show');
             });

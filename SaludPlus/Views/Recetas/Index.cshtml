@@ -1,0 +1,202 @@
+﻿@{
+    ViewBag.Title = "Despacho de Recetas";
+}
+
+<div class="container-fluid mt-4 px-4 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1"><i class="fas fa-prescription-bottle-alt text-primary me-2"></i>Módulo de Farmacia</h4>
+            <p class="text-muted mb-0 small">Gestión y despacho de recetas médicas emitidas en clínica.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle table-hover mb-0" id="tablaRecetas">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">N° Receta</th>
+                            <th>Fecha de Emisión</th>
+                            <th>Paciente</th>
+                            <th>Médico Tratante</th>
+                            <th>Ítems</th>
+                            <th>Estado</th>
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalleReceta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="fas fa-file-medical me-2"></i>Despacho de Receta <span id="lblNumeroReceta"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4 bg-light">
+                <input type="hidden" id="hdnRecetaID" />
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase">Paciente</label>
+                        <h6 class="fw-bold mb-0 text-dark" id="lblPaciente">--</h6>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <label class="text-muted small fw-bold text-uppercase">Médico Tratante</label>
+                        <h6 class="fw-bold mb-0 text-dark" id="lblMedico">--</h6>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white fw-bold text-primary py-3">
+                        <i class="fas fa-box-open me-2"></i>Productos a Entregar
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0" id="tablaDetalles">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Medicamento</th>
+                                    <th>Dosis</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th>Indicaciones (Imprimir en viñeta)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-white border-top-0 pt-0 pb-3 pe-4">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success fw-bold px-4" id="btnDispensar" onclick="marcarDispensada()">
+                    <i class="fas fa-check-circle me-2"></i>Marcar como Dispensada
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            cargarRecetas();
+        });
+
+        // Función para formatear la fecha que viene de C# a formato legible
+        function formatearFecha(fechaJson) {
+            if (!fechaJson) return "";
+            var ms = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
+            var d = new Date(ms);
+            return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear() + " " +
+                   ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+        }
+
+        // Llamada AJAX para llenar la tabla
+        function cargarRecetas() {
+            $.get('@Url.Action("Listar", "Recetas")', function (data) {
+                var html = "";
+
+                if(data.length === 0) {
+                    html = "<tr><td colspan='7' class='text-center py-4 text-muted'>No hay recetas registradas en el sistema.</td></tr>";
+                }
+
+                $.each(data, function (i, item) {
+                    // Colores para el estado de la receta (Adaptados exactos a tu BD)
+                    let badgeColor = "bg-secondary";
+                    if (item.Estado === "Emitida") badgeColor = "bg-warning text-dark"; // Pendiente
+                    if (item.Estado === "Dispensada") badgeColor = "bg-success"; // Ya se entregó la medicina
+                    if (item.Estado === "Vencida" || item.Estado === "Anulada") badgeColor = "bg-danger"; // Inválidas
+
+                    // Botones de acción
+                    let btnDetalles = `<button class='btn btn-light btn-sm text-primary shadow-sm border me-1' title='Ver medicamentos' onclick='verDetalles(${item.RecetaID})'><i class='fas fa-eye'></i> Ver</button>`;
+
+                    html += `<tr>
+                        <td class='ps-4 fw-bold text-primary'>#REC-${item.RecetaID.toString().padStart(4, '0')}</td>
+                        <td class='text-muted small'>${formatearFecha(item.FechaEmision)}</td>
+                        <td><h6 class='mb-0 fw-bold fs-6'>${item.PacienteNombre}</h6></td>
+                        <td class='text-muted small'>Dr. ${item.MedicoNombre}</td>
+                        <td><span class='badge bg-light text-dark border'>${item.TotalMedicamentos} prod.</span></td>
+                        <td><span class='badge ${badgeColor} px-2 py-1'>${item.Estado}</span></td>
+                        <td class='text-center pe-4'>
+                            ${btnDetalles}
+                        </td>
+                    </tr>`;
+                });
+
+                $("#tablaRecetas tbody").html(html);
+            });
+        }
+
+        // Función para abrir el modal y cargar los detalles de la receta
+        function verDetalles(idReceta) {
+            $.get('/Recetas/ConsultarDetalle?id=' + idReceta, function (res) {
+                if (res.success) {
+                    // 1. Llenamos los datos generales en el encabezado del Modal
+                    $("#hdnRecetaID").val(res.header.RecetaID);
+                    $("#lblNumeroReceta").text("#REC-" + res.header.RecetaID.toString().padStart(4, '0'));
+                    $("#lblPaciente").text(res.header.Paciente);
+                    $("#lblMedico").text(res.header.Medico);
+
+                    // Ocultar o mostrar el botón según el estado actual
+                    if (res.header.Estado === "Dispensada") {
+                        $("#btnDispensar").hide(); // Ya se dispensó, ocultamos el botón
+                    } else {
+                        $("#btnDispensar").show(); // Pendiente, mostramos el botón
+                    }
+
+                    // 2. Dibujamos la tabla de DetalleReceta
+                    let html = "";
+                    $.each(res.detalles, function(i, item) {
+                        // Si el médico usó el comodín, lo resaltamos en rojo para alertar a farmacia
+                        let nombreMed = item.Medicamento;
+                        if(item.EsComodin) {
+                            nombreMed = "<span class='text-danger fw-bold'><i class='fas fa-exclamation-triangle'></i> MEDICAMENTO EXTERNO</span>";
+                        }
+
+                        html += `<tr>
+                                    <td class='ps-3 fw-bold'>${nombreMed}</td>
+                                    <td>${item.Dosis}</td>
+                                    <td class='text-center fw-bold fs-5'>${item.Cantidad}</td>
+                                    <td class='text-muted small'>${item.Indicaciones}</td>
+                                 </tr>`;
+                    });
+
+                    $("#tablaDetalles tbody").html(html);
+
+                    // 3. Abrimos el modal
+                    $('#modalDetalleReceta').modal('show');
+                } else {
+                    alert("Error al obtener detalles: " + res.mensaje);
+                }
+            });
+        }
+
+        // Función para cambiar el estado a "Dispensada"
+        function marcarDispensada() {
+            let idReceta = $("#hdnRecetaID").val();
+            if (confirm("¿Confirma que está dispensando físicamente estos medicamentos al paciente?")) {
+                $.post('/Recetas/DespacharReceta?id=' + idReceta, function (res) {
+                    if (res.success) {
+                        $('#modalDetalleReceta').modal('hide');
+                        cargarRecetas(); // Recargamos la tabla de fondo para que cambie a verde
+                    } else {
+                        alert(res.mensaje);
+                    }
+                });
+            }
+        }
+    </script>
+}

@@ -60,7 +60,7 @@ namespace SaludPlus.Controllers
                     c.MotivoConsulta,
                     c.Diagnostico
                 })
-                .OrderByDescending(c => c.FechaConsulta) 
+                .OrderByDescending(c => c.FechaConsulta)
                 .ToList();
 
             return Json(consultas, JsonRequestBehavior.AllowGet);
@@ -72,7 +72,8 @@ namespace SaludPlus.Controllers
         {
             var consulta = db.Consultas
                 .Where(c => c.ConsultaID == id)
-                .Select(c => new {
+                .Select(c => new
+                {
                     c.ConsultaID,
                     c.CitaID,
                     c.MedicoID,
@@ -98,52 +99,92 @@ namespace SaludPlus.Controllers
             return Json(new { success = true, data = consulta }, JsonRequestBehavior.AllowGet);
         }
 
-        // GUARDAR O ACTUALIZAR LA NOTA MÉDICA
+        // GUARDAR CONSULTA Y GENERAR RECETA AUTOMÁTICAMENTE
         [HttpPost]
-        public JsonResult Guardar(Consultas obj)
+        public JsonResult Guardar(ConsultaFichaDTO payload)
         {
+            // Desempaquetamos los datos que vienen del JavaScript
+            Consultas obj = payload.ConsultaData;
+            List<DetalleRecetaDTO> listaMedicamentos = payload.ListaReceta;
+
             using (var transaction = db.Database.BeginTransaction())
             {
                 try
                 {
                     if (obj.ConsultaID == 0)
                     {
-                        bool existeConsulta = db.Consultas.Any(c => c.CitaID == obj.CitaID);
-                        if (existeConsulta)
+                        // --- 1. GUARDAR LA CONSULTA ---
+                        // Validamos que no haya duplicados
+                        if (db.Consultas.Any(c => c.CitaID == obj.CitaID))
                         {
-                            return Json(new { success = false, mensaje = "Esta cita ya tiene un expediente médico guardado. No se pueden crear consultas duplicadas para la misma cita." });
+                            return Json(new { success = false, mensaje = "Esta cita ya tiene un expediente guardado." });
                         }
 
-         
                         obj.FechaConsulta = DateTime.Now;
 
-                        // Extramos IDs obligatorios y actualizar la cita relacionada
                         if (obj.CitaID != null)
                         {
-                            var citaRelacionada = db.Citas.Find(obj.CitaID);
-                            if (citaRelacionada != null)
+                            var cita = db.Citas.Find(obj.CitaID);
+                            if (cita != null)
                             {
-                                // Le pasamos a la nueva consulta el Paciente y el Médico que estaban en la cita
-                                obj.PacienteID = citaRelacionada.PacienteID;
-                                obj.MedicoID = citaRelacionada.MedicoID;
-
-                                // Cambiamos el estado de la Cita
-                                citaRelacionada.Estado = "Completada";
-                                db.Entry(citaRelacionada).State = EntityState.Modified;
+                                obj.PacienteID = cita.PacienteID;
+                                obj.MedicoID = cita.MedicoID;
+                                cita.Estado = "Completada";
+                                db.Entry(cita).State = EntityState.Modified;
                             }
                         }
 
-                        // Agregamos la consulta a la base de datos ya con todos sus FKs completos
                         db.Consultas.Add(obj);
+                        db.SaveChanges(); // Guardamos para que se genere el ID de la Consulta
+
+                        // --- 2. GENERAR LA RECETA 
+                        if (listaMedicamentos != null && listaMedicamentos.Count > 0)
+                        {
+                            Recetas nuevaReceta = new Recetas
+                            {
+                                ConsultaID = obj.ConsultaID,
+                                MedicoID = obj.MedicoID,
+                                PacienteID = obj.PacienteID,
+                                FechaEmision = DateTime.Now,
+                                FechaVencimiento = DateTime.Now.AddDays(15), 
+                                Estado = "Emitida", // Estado inicial para que Farmacia la vea amarilla
+                                Observaciones = "Generada desde Consultorio"
+                            };
+
+                            db.Recetas.Add(nuevaReceta);
+                            db.SaveChanges(); // Guardamos para generar el ID de la Receta
+
+                            // --- 3. GUARDAR DETALLES Y DESCONTAR INVENTARIO ---
+                            foreach (var item in listaMedicamentos)
+                            {
+                                DetalleReceta detalle = new DetalleReceta
+                                {
+                                    RecetaID = nuevaReceta.RecetaID,
+                                    MedicamentoID = item.MedicamentoID,
+                                    Dosis = item.Dosis,
+                                    Cantidad = item.Cantidad,
+                                    Indicaciones = item.Indicaciones
+                                };
+                                db.DetalleReceta.Add(detalle);
+
+                                // Buscamos la medicina en la BD para bajarle el stock
+                                var medDB = db.Medicamentos.Find(item.MedicamentoID);
+
+                                // Si NO es el comodín de "Solo Texto", le restamos el inventario
+                                if (medDB != null && medDB.Nombre != "MEDICAMENTO EXTERNO (Solo texto)")
+                                {
+                                    medDB.StockActual -= item.Cantidad;
+                                    db.Entry(medDB).State = EntityState.Modified;
+                                }
+                            }
+                            db.SaveChanges(); // Confirmamos los detalles y el nuevo stock
+                        }
                     }
                     else
                     {
-                        // 3. ACTUALIZAR CONSULTA EXISTENTE
+                        // ACTUALIZAR CONSULTA EXISTENTE (No tocamos la receta para evitar descuadres de inventario)
                         var data = db.Consultas.Find(obj.ConsultaID);
-                        if (data == null)
-                        {
-                            return Json(new { success = false, mensaje = "El registro no existe." });
-                        }
+                        if (data == null) return Json(new { success = false, mensaje = "El registro no existe." });
 
                         data.ExamenFisico = obj.ExamenFisico;
                         data.Diagnostico = obj.Diagnostico;
@@ -154,26 +195,22 @@ namespace SaludPlus.Controllers
                         data.PresionArterial = obj.PresionArterial;
                         data.Temperatura = obj.Temperatura;
                         data.ProximaRevision = obj.ProximaRevision;
+
+                        db.SaveChanges();
                     }
 
-                    db.SaveChanges();
-                    transaction.Commit(); // Confirmamos que todo se guardó bien 
-
+                    transaction.Commit();
                     return Json(new { success = true });
                 }
                 catch (Exception ex)
                 {
-                    transaction.Rollback(); // Si hay error, deshacemos todo para no dejar datos corruptos
-
-                    // Extraer el error real de SQL en lugar del error genérico de Entity Framework
-                    string errorReal = ex.InnerException != null ?
-                                      (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message)
-                                      : ex.Message;
-
+                    transaction.Rollback(); 
+                    string errorReal = ex.InnerException != null ? (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message) : ex.Message;
                     return Json(new { success = false, mensaje = errorReal });
                 }
             }
         }
+
 
         // OBTENER CITAS PENDIENTES DEL DÍA 
         [HttpGet]
@@ -187,7 +224,8 @@ namespace SaludPlus.Controllers
                             && DbFunctions.TruncateTime(c.FechaCita) == hoy)
                 // Ordenamos por hora para que el médico vea la agenda en orden lógico
                 .OrderBy(c => c.HoraCita)
-                .Select(c => new {
+                .Select(c => new
+                {
                     Id = c.CitaID,
                     PacienteID = c.PacienteID,
                     MedicoID = c.MedicoID,
@@ -198,13 +236,32 @@ namespace SaludPlus.Controllers
                 .ToList(); // Lo traemos a memoria
 
             // Formateamos el texto en memoria para evitar errores de traducción a SQL
-            var listadoFormateado = citasDelDia.Select(c => new {
+            var listadoFormateado = citasDelDia.Select(c => new
+            {
                 Id = c.Id,
                 // Agregamos la hora al inicio para que se vea claro en el ComboBox
                 Texto = $"[{c.Hora}] Cita #{c.Id} - {c.Nombres} ({c.Motivo})"
             }).ToList();
 
             return Json(listadoFormateado, JsonRequestBehavior.AllowGet);
+        }
+
+
+        // =======================================================
+        // DTOs: Clases auxiliares para recibir la Ficha + Receta
+        // =======================================================
+        public class ConsultaFichaDTO
+        {
+            public Consultas ConsultaData { get; set; }
+            public List<DetalleRecetaDTO> ListaReceta { get; set; }
+        }
+
+        public class DetalleRecetaDTO
+        {
+            public int MedicamentoID { get; set; }
+            public string Dosis { get; set; }
+            public int Cantidad { get; set; }
+            public string Indicaciones { get; set; }
         }
     }
 }

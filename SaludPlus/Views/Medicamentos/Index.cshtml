@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "Catálogo de Farmacia";
+}
+
+<div class="container-fluid mt-4 px-4">
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-pills text-success me-2"></i>Gestión de Medicamentos</h5>
+            <button class="btn btn-success btn-sm px-3 shadow-sm" onclick="abrirModal(null)">
+                <i class="fas fa-plus me-1"></i> Nuevo Medicamento
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0" id="tablaMedicamentos">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Nombre Comercial</th>
+                        <th>Laboratorio</th>
+                        <th>Presentación</th>
+                        <th>Stock Actual</th>
+                        <th>Precio ($)</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMedicamento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-success text-white">
+                <h6 class="modal-title fw-bold" id="tituloModal"><i class="fas fa-capsules me-2"></i>Detalle de Medicamento</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="txtId" value="0" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Nombre del Medicamento <span class="text-danger">*</span></label>
+                        <input type="text" id="txtNombre" class="form-control" placeholder="Ej. Acetaminofén 500mg" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Laboratorio</label>
+                        <input type="text" id="txtLaboratorio" class="form-control" placeholder="Ej. MK, Bayer..." />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Presentación</label>
+                        <select id="cboPresentacion" class="form-select">
+                            <option value="Tabletas">Tabletas</option>
+                            <option value="Cápsulas">Cápsulas</option>
+                            <option value="Jarabe">Jarabe</option>
+                            <option value="Inyección">Inyección</option>
+                            <option value="Crema/Ungüento">Crema/Ungüento</option>
+                            <option value="Gotas">Gotas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small">Vía de Administración</label>
+                        <select id="cboVia" class="form-select">
+                            <option value="Oral">Oral</option>
+                            <option value="Intravenosa">Intravenosa</option>
+                            <option value="Intramuscular">Intramuscular</option>
+                            <option value="Tópica">Tópica</option>
+                            <option value="Oftálmica">Oftálmica</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Stock Inicial</label>
+                        <input type="number" id="txtStock" class="form-control" value="0" min="0" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Stock Mínimo (Alerta)</label>
+                        <input type="number" id="txtMinimo" class="form-control" value="10" min="0" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">Precio Unitario ($)</label>
+                        <input type="number" id="txtPrecio" class="form-control" value="0.00" step="0.01" min="0" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success fw-bold" onclick="guardar()">Guardar Registro</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            cargarDatos();
+        });
+
+        function cargarDatos() {
+            $.get('@Url.Action("Listar", "Medicamentos")', function (data) {
+                var html = "";
+                $.each(data, function (i, item) {
+
+                    // Colores para el inventario
+                    let badgeStock = "bg-success";
+                    if (item.StockActual <= item.StockMinimo) badgeStock = "bg-warning text-dark";
+                    if (item.StockActual === 0) badgeStock = "bg-danger";
+
+                    // Si es el comodín, lo marcamos diferente visualmente
+                    let esComodin = item.Nombre === "MEDICAMENTO EXTERNO (Solo texto)";
+                    let trClass = esComodin ? "table-primary" : "";
+
+                    let botones = "";
+                    if (!esComodin) {
+                        botones = `<button class='btn btn-light btn-sm text-primary me-1' onclick='abrirModal(${item.MedicamentoID})'><i class='fas fa-edit'></i></button>` +
+                                  `<button class='btn btn-light btn-sm text-danger' onclick='eliminar(${item.MedicamentoID})'><i class='fas fa-trash'></i></button>`;
+                    } else {
+                        botones = `<span class='badge bg-primary'><i class='fas fa-lock'></i> Sistema</span>`;
+                    }
+
+                    html += `<tr class="${trClass}">
+                        <td class='ps-4 fw-bold'>${item.Nombre}</td>
+                        <td class='text-muted'>${item.Laboratorio || "-"}</td>
+                        <td>${item.Presentacion} <small class="text-muted">(${item.ViaAdministracion})</small></td>
+                        <td><span class='badge ${badgeStock} px-2 py-1 fs-6'>${esComodin ? "∞" : item.StockActual}</span></td>
+                        <td class='fw-bold text-success'>$${item.Precio.toFixed(2)}</td>
+                        <td class='text-center'>${botones}</td>
+                    </tr>`;
+                });
+                $("#tablaMedicamentos tbody").html(html);
+            });
+        }
+
+        function abrirModal(id) {
+            $("#txtId").val(0);
+            $("#txtNombre").val(''); $("#txtLaboratorio").val('');
+            $("#cboPresentacion").val('Tabletas'); $("#cboVia").val('Oral');
+            $("#txtStock").val(0); $("#txtMinimo").val(10); $("#txtPrecio").val('0.00');
+            $("#tituloModal").html("<i class='fas fa-plus-circle me-2'></i>Nuevo Medicamento");
+
+            if (id != null) {
+                $.get('/Medicamentos/Consultar?id=' + id, function (res) {
+                    if (res.success) {
+                        let data = res.data;
+                        $("#txtId").val(data.MedicamentoID);
+                        $("#txtNombre").val(data.Nombre);
+                        $("#txtLaboratorio").val(data.Laboratorio);
+                        $("#cboPresentacion").val(data.Presentacion);
+                        $("#cboVia").val(data.ViaAdministracion);
+                        $("#txtStock").val(data.StockActual);
+                        $("#txtMinimo").val(data.StockMinimo);
+                        $("#txtPrecio").val(data.Precio);
+                        $("#tituloModal").html("<i class='fas fa-edit me-2'></i>Editar Medicamento");
+                    }
+                });
+            }
+            $('#modalMedicamento').modal('show');
+        }
+
+        function guardar() {
+            let request = {
+                MedicamentoID: $("#txtId").val(),
+                Nombre: $("#txtNombre").val(),
+                Laboratorio: $("#txtLaboratorio").val(),
+                Presentacion: $("#cboPresentacion").val(),
+                ViaAdministracion: $("#cboVia").val(),
+                StockActual: $("#txtStock").val() || 0,
+                StockMinimo: $("#txtMinimo").val() || 0,
+                Precio: $("#txtPrecio").val() || 0
+            };
+
+            if (request.Nombre.trim() === "") {
+                alert("El nombre del medicamento es obligatorio.");
+                return;
+            }
+
+            $.post('@Url.Action("Guardar", "Medicamentos")', request, function (res) {
+                if (res.success) {
+                    $('#modalMedicamento').modal('hide');
+                    cargarDatos();
+                } else {
+                    alert("Error: " + res.mensaje);
+                }
+            });
+        }
+
+        function eliminar(id) {
+            if (confirm("¿Está seguro de eliminar este medicamento?")) {
+                $.post('@Url.Action("Eliminar", "Medicamentos")?id=' + id, function (res) {
+                    if (res.success) {
+                        cargarDatos();
+                    } else {
+                        alert(res.mensaje);
+                    }
+                });
+            }
+        }
+    </script>
+}

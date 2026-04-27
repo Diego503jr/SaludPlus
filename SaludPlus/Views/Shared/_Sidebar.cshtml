@@ -3,11 +3,14 @@
     var usuario = (Usuarios)Session["User"];
     var nombreRol = usuario?.Roles?.Nombre ?? "";
 
+    // Obtenemos el controlador y la acción actual para pintar el menú activo
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
 
 <div class="d-flex flex-column h-100">
-    <div class="sidebar-logo-container d-none d-lg-flex">
-        <a href="@Url.Action("Index", "Home")" class="text-decoration-none">
+    <div class="sidebar-logo-container d-none d-lg-flex p-3 text-center border-bottom">
+        <a href="@Url.Action("Index", "Home")" class="text-decoration-none w-100">
             <img src="@Url.Content("~/Content/img/SaludPlusLogo.png")"
                  alt="Salud Plus Logo"
                  class="img-fluid"
@@ -16,56 +19,80 @@
     </div>
 
     <div class="list-group list-group-flush flex-grow-1 overflow-auto mt-3 px-3">
-        <small class="text-uppercase text-muted fw-bold mb-2 ps-2" style="font-size: 11px;">Menú Principal</small>
 
-        <a href="@Url.Action("Index", "Home")" class="list-group-item list-group-item-action border-0 rounded mb-1 active py-3">
-            <i class="fas fa-th-large me-2"></i> Dashboard
+        <small class="text-uppercase text-muted fw-bold mb-2 ps-2" style="font-size: 11px;">Principal</small>
+
+        <a href="@Url.Action("Index", "Home")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Home" ? "active" : "")">
+            <i class="fas fa-chart-pie me-2"></i> Dashboard
         </a>
 
-        <small class="text-uppercase text-muted fw-bold mt-3 mb-2 ps-2" style="font-size: 11px;">Gestión Operativa</small>
+        <small class="text-uppercase text-muted fw-bold mt-3 mb-2 ps-2" style="font-size: 11px;">Módulos del Sistema</small>
 
-        @* --- OPCIONES SEGÚN ROL --- *@
-
+        @* ======================================================= *@
+        @* ROL: ADMINISTRADOR (Dueño de los Catálogos y Seguridad) *@
+        @* ======================================================= *@
         @if (nombreRol == "Administrador")
         {
-            <a href="@Url.Action("Index", "Pacientes")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-user-injured me-2"></i> Gestión Pacientes
+            <a href="@Url.Action("Index", "Pacientes")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Pacientes" ? "active" : "")">
+                <i class="fas fa-users me-2"></i> Directorio Pacientes
             </a>
-            <a href="@Url.Action("Index", "Medicos")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-user-md me-2"></i> Gestión Médicos
+            <a href="@Url.Action("Index", "Medicos")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Medicos" ? "active" : "")">
+                <i class="fas fa-user-md me-2"></i> Personal Médico
             </a>
-            <a href="@Url.Action("Index", "Usuarios")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-users-cog me-2"></i> Usuarios y Roles
+            <a href="@Url.Action("Index", "Especialidades")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Especialidades" ? "active" : "")">
+                <i class="fas fa-award me-2"></i> Especialidades
+            </a>
+            <a href="@Url.Action("Index", "Medicamentos")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Medicamentos" ? "active" : "")">
+                <i class="fas fa-pills me-2"></i> Inventario Farmacia
+            </a>
+
+            <hr class="text-muted my-2" />
+            <small class="text-uppercase text-muted fw-bold mb-2 ps-2" style="font-size: 11px;">Seguridad</small>
+
+            <a href="@Url.Action("Index", "Usuarios")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Usuarios" ? "active" : "")">
+                <i class="fas fa-user-shield me-2"></i> Gestión Usuarios
             </a>
         }
+
+        @* ======================================================= *@
+        @* ROL: MÉDICO (Dueño del Consultorio y Expedientes)       *@
+        @* ======================================================= *@
         else if (nombreRol == "Medico")
         {
-            <a href="@Url.Action("Index", "Consultas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-stethoscope me-2"></i> Mis Consultas
+            <a href="@Url.Action("Index", "Consultas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Consultas" ? "active" : "")">
+                <i class="fas fa-stethoscope me-2"></i> Panel de Consultas
             </a>
-            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-calendar-check me-2"></i> Mis Citas
+            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Citas" && currentAction != "Calendario" ? "active" : "")">
+                <i class="fas fa-list-ul me-2"></i> Mis Citas (Lista)
             </a>
-            <a href="@Url.Action("Calendario", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-calendar-alt me-2"></i> Calendario
+            <a href="@Url.Action("Calendario", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentAction == "Calendario" ? "active" : "")">
+                <i class="fas fa-calendar-alt me-2"></i> Mi Agenda Visual
             </a>
         }
+
+        @* ======================================================= *@
+        @* ROL: RECEPCIONISTA (Atención al Cliente y Farmacia)     *@
+        @* ======================================================= *@
         else if (nombreRol == "Recepcionista")
         {
-            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-calendar-plus me-2"></i> Citas
+            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Citas" && currentAction != "Calendario" ? "active" : "")">
+                <i class="fas fa-calendar-plus me-2"></i> Agendar Citas
             </a>
-            <a href="@Url.Action("Index", "Medicos")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-user-md me-2"></i> Médicos
+            <a href="@Url.Action("Calendario", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentAction == "Calendario" ? "active" : "")">
+                <i class="fas fa-calendar-alt me-2"></i> Calendario Global
             </a>
-            <a href="@Url.Action("Index", "Pacientes")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-user-injured me-2"></i> Pacientes
+            <a href="@Url.Action("Index", "Pacientes")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Pacientes" ? "active" : "")">
+                <i class="fas fa-user-plus me-2"></i> Registrar Pacientes
             </a>
-            <a href="@Url.Action("Historial", "Consultas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-history me-2"></i> Historial
+            <a href="@Url.Action("Index", "Medicos")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Medicos" ? "active" : "")">
+                <i class="fas fa-address-book me-2"></i> Directorio Médico
             </a>
-            <a href="@Url.Action("Index", "Citas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3">
-                <i class="fas fa-user-md me-2"></i> Citas
+
+            <hr class="text-muted my-2" />
+            <small class="text-uppercase text-muted fw-bold mb-2 ps-2" style="font-size: 11px;">Módulo Farmacia</small>
+
+            <a href="@Url.Action("Index", "Recetas")" class="list-group-item list-group-item-action border-0 rounded mb-1 py-3 @(currentController == "Recetas" ? "active" : "")">
+                <i class="fas fa-prescription-bottle-alt me-2"></i> Despacho Recetas
             </a>
         }
     </div>
