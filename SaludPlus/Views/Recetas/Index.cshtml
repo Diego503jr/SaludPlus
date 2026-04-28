@@ -69,6 +69,7 @@
                                     <th>Dosis</th>
                                     <th class="text-center">Cant.</th>
                                     <th>Indicaciones (Imprimir en viñeta)</th>
+                                    <th>Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -159,7 +160,12 @@
 
                     // 2. Dibujamos la tabla de DetalleReceta
                     let html = "";
-                    $.each(res.detalles, function(i, item) {
+                    $.each(res.detalles, function (i, item) {
+                        // Colores para el estado del detalle de la receta
+                        let badgeColor = "bg-secondary";
+                        if (!item.Estado) badgeColor = "bg-danger text-white"; // No Dispensada
+                        if (item.Estado) badgeColor = "bg-success text-white"; // Dispensada
+
                         // Si el médico usó el comodín, lo resaltamos en rojo para alertar a farmacia
                         let nombreMed = item.Medicamento;
                         if(item.EsComodin) {
@@ -171,6 +177,7 @@
                                     <td>${item.Dosis}</td>
                                     <td class='text-center fw-bold fs-5'>${item.Cantidad}</td>
                                     <td class='text-muted small'>${item.Indicaciones}</td>
+                                    <td><span class='badge ${badgeColor} px-2 py-1'>${item.Estado ? 'Dispensada' : "No Dispensada"}</span></td>
                                  </tr>`;
                     });
 

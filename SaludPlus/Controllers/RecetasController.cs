@@ -61,7 +61,7 @@ namespace SaludPlus.Controllers
                     Medico = receta.Medicos.Usuarios.Nombres + " " + receta.Medicos.Usuarios.Apellidos,
                     Fecha = receta.FechaEmision.ToString("dd/MM/yyyy HH:mm"),
                     receta.Estado,
-                    receta.Observaciones
+                    receta.Observaciones,
                 };
 
                 // Preparamos el cuerpo (La lista de pastillas a entregar)
@@ -73,7 +73,8 @@ namespace SaludPlus.Controllers
                         EsComodin = d.Medicamentos.Nombre == "MEDICAMENTO EXTERNO (Solo texto)",
                         d.Dosis,
                         d.Cantidad,
-                        d.Indicaciones
+                        d.Indicaciones,
+                        d.Estado
                     }).ToList();
 
                 return Json(new { success = true, header = infoGeneral, detalles = listaDetalles }, JsonRequestBehavior.AllowGet);

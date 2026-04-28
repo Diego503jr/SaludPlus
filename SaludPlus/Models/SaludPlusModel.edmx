@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="SaludPlussModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="SaludPlussModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Citas">
           <Key>
             <PropertyRef Name="CitaID" />
@@ -50,6 +50,7 @@
           <Property Name="Dosis" Type="varchar" MaxLength="100" Nullable="false" />
           <Property Name="Cantidad" Type="int" Nullable="false" />
           <Property Name="Indicaciones" Type="varchar" MaxLength="300" />
+          <Property Name="Estado" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="Especialidades">
           <Key>
@@ -394,8 +395,7 @@
             <End Role="Usuarios" EntitySet="Usuarios" />
           </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="SaludPlussModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -454,6 +454,7 @@
           <Property Name="Indicaciones" Type="String" MaxLength="300" FixedLength="false" Unicode="false" />
           <NavigationProperty Name="Medicamentos" Relationship="Self.FK_DetalleReceta_Medicamentos" FromRole="DetalleReceta" ToRole="Medicamentos" />
           <NavigationProperty Name="Recetas" Relationship="Self.FK_DetalleReceta_Recetas" FromRole="DetalleReceta" ToRole="Recetas" />
+          <Property Name="Estado" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="Especialidades">
           <Key>
@@ -864,6 +865,7 @@
           <EntitySetMapping Name="DetalleReceta">
             <EntityTypeMapping TypeName="SaludPlussModel.DetalleReceta">
               <MappingFragment StoreEntitySet="DetalleReceta">
+                <ScalarProperty Name="Estado" ColumnName="Estado" />
                 <ScalarProperty Name="DetalleID" ColumnName="DetalleID" />
                 <ScalarProperty Name="RecetaID" ColumnName="RecetaID" />
                 <ScalarProperty Name="MedicamentoID" ColumnName="MedicamentoID" />

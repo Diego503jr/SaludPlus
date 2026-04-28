@@ -20,6 +20,7 @@ namespace SaludPlus.Models
         public string Dosis { get; set; }
         public int Cantidad { get; set; }
         public string Indicaciones { get; set; }
+        public bool Estado { get; set; }
     
         public virtual Medicamentos Medicamentos { get; set; }
         public virtual Recetas Recetas { get; set; }
