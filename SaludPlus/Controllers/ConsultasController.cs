@@ -146,7 +146,7 @@ namespace SaludPlus.Controllers
                                 MedicoID = obj.MedicoID,
                                 PacienteID = obj.PacienteID,
                                 FechaEmision = DateTime.Now,
-                                FechaVencimiento = DateTime.Now.AddDays(15), 
+                                FechaVencimiento = DateTime.Now.AddDays(15),
                                 Estado = "Emitida", // Estado inicial para que Farmacia la vea amarilla
                                 Observaciones = "Generada desde Consultorio"
                             };
@@ -163,7 +163,8 @@ namespace SaludPlus.Controllers
                                     MedicamentoID = item.MedicamentoID,
                                     Dosis = item.Dosis,
                                     Cantidad = item.Cantidad,
-                                    Indicaciones = item.Indicaciones
+                                    Indicaciones = item.Indicaciones,
+                                    Estado = true // Inicializado como pendiente de despachar
                                 };
                                 db.DetalleReceta.Add(detalle);
 
@@ -178,6 +179,25 @@ namespace SaludPlus.Controllers
                                 }
                             }
                             db.SaveChanges(); // Confirmamos los detalles y el nuevo stock
+                        }
+
+                        // --- 4. PROGRAMAR PRÓXIMA CITA AUTOMÁTICA ---
+                        if (obj.ProximaRevision.HasValue)
+                        {
+                            Citas nuevaCita = new Citas
+                            {
+                                PacienteID = obj.PacienteID,
+                                MedicoID = obj.MedicoID,
+                                FechaCita = obj.ProximaRevision.Value,
+                                HoraCita = new TimeSpan(8, 0, 0), // Hora por defecto (8:00 AM)
+                                Motivo = "Cita de Control / Seguimiento",
+                                Estado = "Pendiente", 
+                                Observaciones = "Generada automáticamente desde el consultorio por Próxima Revisión.",
+                                FechaCreacion = DateTime.Now
+                            };
+
+                            db.Citas.Add(nuevaCita);
+                            db.SaveChanges();
                         }
                     }
                     else
@@ -204,13 +224,12 @@ namespace SaludPlus.Controllers
                 }
                 catch (Exception ex)
                 {
-                    transaction.Rollback(); 
+                    transaction.Rollback();
                     string errorReal = ex.InnerException != null ? (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message) : ex.Message;
                     return Json(new { success = false, mensaje = errorReal });
                 }
             }
         }
-
 
         // OBTENER CITAS PENDIENTES DEL DÍA 
         [HttpGet]
@@ -245,7 +264,6 @@ namespace SaludPlus.Controllers
 
             return Json(listadoFormateado, JsonRequestBehavior.AllowGet);
         }
-
 
         // =======================================================
         // DTOs: Clases auxiliares para recibir la Ficha + Receta

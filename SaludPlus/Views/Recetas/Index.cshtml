@@ -81,9 +81,6 @@
 
             <div class="modal-footer bg-white border-top-0 pt-0 pb-3 pe-4">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-success fw-bold px-4" id="btnDispensar" onclick="marcarDispensada()">
-                    <i class="fas fa-check-circle me-2"></i>Marcar como Dispensada
-                </button>
             </div>
 
         </div>
@@ -115,7 +112,6 @@
                 }
 
                 $.each(data, function (i, item) {
-                    // Colores para el estado de la receta (Adaptados exactos a tu BD)
                     let badgeColor = "bg-secondary";
                     if (item.Estado === "Emitida") badgeColor = "bg-warning text-dark"; // Pendiente
                     if (item.Estado === "Dispensada") badgeColor = "bg-success"; // Ya se entregó la medicina
@@ -145,31 +141,31 @@
         function verDetalles(idReceta) {
             $.get('/Recetas/ConsultarDetalle?id=' + idReceta, function (res) {
                 if (res.success) {
-                    // 1. Llenamos los datos generales en el encabezado del Modal
                     $("#hdnRecetaID").val(res.header.RecetaID);
                     $("#lblNumeroReceta").text("#REC-" + res.header.RecetaID.toString().padStart(4, '0'));
                     $("#lblPaciente").text(res.header.Paciente);
                     $("#lblMedico").text(res.header.Medico);
 
-                    // Ocultar o mostrar el botón según el estado actual
-                    if (res.header.Estado === "Dispensada") {
-                        $("#btnDispensar").hide(); // Ya se dispensó, ocultamos el botón
-                    } else {
-                        $("#btnDispensar").show(); // Pendiente, mostramos el botón
-                    }
-
-                    // 2. Dibujamos la tabla de DetalleReceta
                     let html = "";
                     $.each(res.detalles, function (i, item) {
-                        // Colores para el estado del detalle de la receta
-                        let badgeColor = "bg-secondary";
-                        if (!item.Estado) badgeColor = "bg-danger text-white"; // No Dispensada
-                        if (item.Estado) badgeColor = "bg-success text-white"; // Dispensada
 
-                        // Si el médico usó el comodín, lo resaltamos en rojo para alertar a farmacia
                         let nombreMed = item.Medicamento;
-                        if(item.EsComodin) {
+                        if (item.EsComodin) {
                             nombreMed = "<span class='text-danger fw-bold'><i class='fas fa-exclamation-triangle'></i> MEDICAMENTO EXTERNO</span>";
+                        }
+
+                        // LÓGICA DE BOTONES INDIVIDUALES
+                        let isDispensada = (item.Estado === "Dispensada" || item.Estado === true);
+
+                        let estadoHtml = "";
+                        if (isDispensada) {
+                            // Si ya se entregó, mostramos viñeta verde
+                            estadoHtml = `<span class="badge bg-success"><i class="fas fa-check-double me-1"></i> Entregado</span>`;
+                        } else {
+                            // Si está pendiente, mostramos el botón para entregar esa pastilla específica
+                            estadoHtml = `<button class="btn btn-sm btn-success shadow-sm" onclick="marcarDetalle(${item.DetalleID}, ${res.header.RecetaID})">
+                                            <i class="fas fa-hand-holding-medical me-1"></i> Entregar
+                                          </button>`;
                         }
 
                         html += `<tr>
@@ -177,13 +173,11 @@
                                     <td>${item.Dosis}</td>
                                     <td class='text-center fw-bold fs-5'>${item.Cantidad}</td>
                                     <td class='text-muted small'>${item.Indicaciones}</td>
-                                    <td><span class='badge ${badgeColor} px-2 py-1'>${item.Estado ? 'Dispensada' : "No Dispensada"}</span></td>
+                                    <td class='text-center'>${estadoHtml}</td>
                                  </tr>`;
                     });
 
                     $("#tablaDetalles tbody").html(html);
-
-                    // 3. Abrimos el modal
                     $('#modalDetalleReceta').modal('show');
                 } else {
                     alert("Error al obtener detalles: " + res.mensaje);
@@ -191,14 +185,20 @@
             });
         }
 
-        // Función para cambiar el estado a "Dispensada"
-        function marcarDispensada() {
-            let idReceta = $("#hdnRecetaID").val();
-            if (confirm("¿Confirma que está dispensando físicamente estos medicamentos al paciente?")) {
-                $.post('/Recetas/DespacharReceta?id=' + idReceta, function (res) {
+        //Entrega de Medicamento por Medicamento
+        function marcarDetalle(idDetalle, idReceta) {
+            if (confirm("¿Confirmas la entrega de este medicamento específico al paciente?")) {
+                $.post(`/Recetas/DespacharDetalle?idDetalle=${idDetalle}&idReceta=${idReceta}`, function (res) {
                     if (res.success) {
-                        $('#modalDetalleReceta').modal('hide');
-                        cargarRecetas(); // Recargamos la tabla de fondo para que cambie a verde
+                        if (res.completada) {
+                            // Si el servidor detectó que era la última pastilla que faltaba
+                            alert("¡Todos los medicamentos han sido entregados! La receta general se ha completado.");
+                            $('#modalDetalleReceta').modal('hide');
+                            cargarRecetas(); // Recargamos el panel maestro para ver la receta en verde
+                        } else {
+                            // Si aún faltan pastillas, solo recargamos el contenido de este modal
+                            verDetalles(idReceta);
+                        }
                     } else {
                         alert(res.mensaje);
                     }

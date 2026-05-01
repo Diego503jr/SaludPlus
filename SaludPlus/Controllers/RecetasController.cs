@@ -9,13 +9,12 @@ namespace SaludPlus.Controllers
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();
 
-        // 1. ABRIR LA PANTALLA PRINCIPAL
         public ActionResult Index()
         {
             return View();
         }
 
-        // 2. LISTAR LAS RECETAS PARA LA TABLA AJAX
+        //LISTAR LAS RECETAS PARA LA TABLA AJAX
         [HttpGet]
         public JsonResult Listar()
         {
@@ -44,7 +43,7 @@ namespace SaludPlus.Controllers
             }
         }
 
-        // 3. OBTENER LOS DETALLES DE UNA RECETA ESPECÍFICA (Para el Modal)
+        //OBTENER LOS DETALLES DE UNA RECETA ESPECÍFICA
         [HttpGet]
         public JsonResult ConsultarDetalle(int id)
         {
@@ -53,7 +52,6 @@ namespace SaludPlus.Controllers
                 var receta = db.Recetas.Find(id);
                 if (receta == null) return Json(new { success = false, mensaje = "Receta no encontrada" }, JsonRequestBehavior.AllowGet);
 
-                // Preparamos el encabezado (Información general)
                 var infoGeneral = new
                 {
                     receta.RecetaID,
@@ -64,11 +62,11 @@ namespace SaludPlus.Controllers
                     receta.Observaciones,
                 };
 
-                // Preparamos el cuerpo (La lista de pastillas a entregar)
                 var listaDetalles = db.DetalleReceta
                     .Where(d => d.RecetaID == id)
                     .Select(d => new
                     {
+                        d.DetalleID,
                         Medicamento = d.Medicamentos.Nombre,
                         EsComodin = d.Medicamentos.Nombre == "MEDICAMENTO EXTERNO (Solo texto)",
                         d.Dosis,
@@ -85,46 +83,43 @@ namespace SaludPlus.Controllers
             }
         }
 
-        // 4. CAMBIAR ESTADO A "ENTREGADA"
-        // 4. CAMBIAR ESTADO A "DISPENSADA"
+        // DESPACHAR POR MEDICAMENTO INDIVIDUAL
         [HttpPost]
-        public JsonResult DespacharReceta(int id)
+        public JsonResult DespacharDetalle(int idDetalle, int idReceta)
         {
             try
             {
-                var receta = db.Recetas.Find(id);
-                if (receta == null) return Json(new { success = false, mensaje = "La receta no existe." });
+                var detalle = db.DetalleReceta.Find(idDetalle);
+                if (detalle == null) return Json(new { success = false, mensaje = "El medicamento no existe en la receta." });
 
-                // Validamos con la nueva palabra
-                if (receta.Estado == "Dispensada")
-                    return Json(new { success = false, mensaje = "Esta receta ya fue dispensada anteriormente." });
-
-                // AQUÍ ESTÁ LA MAGIA: Le mandamos a SQL Server la palabra exacta que espera
-                receta.Estado = "Dispensada";
-                db.Entry(receta).State = System.Data.Entity.EntityState.Modified;
+                //Marcamos solo este detalle como entregado
+                detalle.Estado = true;
+                db.Entry(detalle).State = System.Data.Entity.EntityState.Modified;
                 db.SaveChanges();
 
-                return Json(new { success = true });
-            }
-            // 1. Atrapa errores si faltan campos obligatorios en el modelo
-            catch (System.Data.Entity.Validation.DbEntityValidationException dbEx)
-            {
-                string validErrors = "";
-                foreach (var validationErrors in dbEx.EntityValidationErrors)
+                // Buscamos si existe ALGÚN detalle de esta receta que NO esté dispensado
+                bool quedanPendientes = db.DetalleReceta.Any(d => d.RecetaID == idReceta && (d.Estado == null || d.Estado != true));
+
+                bool recetaCompletadaAl100 = false;
+
+                // Si ya no hay pendientes, actualizamos la Receta principal a Dispensada
+                if (!quedanPendientes)
                 {
-                    foreach (var validationError in validationErrors.ValidationErrors)
+                    var recetaMaestra = db.Recetas.Find(idReceta);
+                    if (recetaMaestra != null && recetaMaestra.Estado != "Dispensada")
                     {
-                        validErrors += validationError.PropertyName + ": " + validationError.ErrorMessage + "\n";
+                        recetaMaestra.Estado = "Dispensada";
+                        db.Entry(recetaMaestra).State = System.Data.Entity.EntityState.Modified;
+                        db.SaveChanges();
+                        recetaCompletadaAl100 = true; // Avisamos a la vista que ya terminó
                     }
                 }
-                return Json(new { success = false, mensaje = "Error de validación EF: " + validErrors });
+
+                return Json(new { success = true, completada = recetaCompletadaAl100 });
             }
-            // 2. Atrapa errores directos de SQL Server (Check constraints, Foreign Keys, etc)
             catch (Exception ex)
             {
-                string errorReal = ex.InnerException != null ?
-                                  (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message)
-                                  : ex.Message;
+                string errorReal = ex.InnerException != null ? (ex.InnerException.InnerException != null ? ex.InnerException.InnerException.Message : ex.InnerException.Message) : ex.Message;
                 return Json(new { success = false, mensaje = "Error SQL: " + errorReal });
             }
         }
