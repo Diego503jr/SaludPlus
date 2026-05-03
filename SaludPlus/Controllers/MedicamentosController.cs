@@ -12,8 +12,6 @@ namespace SaludPlus.Controllers
         // GET: Medicamentos
         public ActionResult Index()
         {
-            // --- INICIALIZADOR DEL COMODÍN ---
-            // Revisamos si ya existe nuestro medicamento para "Solo Texto"
             var comodin = db.Medicamentos.FirstOrDefault(m => m.Nombre == "MEDICAMENTO EXTERNO (Solo texto)");
             if (comodin == null)
             {
@@ -40,8 +38,8 @@ namespace SaludPlus.Controllers
         public JsonResult Listar()
         {
             var lista = db.Medicamentos
-                .Where(m => m.Activo == true)
-                .Select(m => new {
+                .Select(m => new
+                {
                     m.MedicamentoID,
                     m.Nombre,
                     m.Laboratorio,
@@ -50,7 +48,8 @@ namespace SaludPlus.Controllers
                     m.StockActual,
                     m.StockMinimo,
                     m.Precio
-                }).ToList();
+                })
+                .ToList();
 
             return Json(lista, JsonRequestBehavior.AllowGet);
         }

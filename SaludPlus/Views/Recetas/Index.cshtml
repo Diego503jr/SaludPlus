@@ -3,7 +3,6 @@
 }
 
 <div class="container-fluid mt-4 px-4 mb-5">
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold text-dark mb-1"><i class="fas fa-prescription-bottle-alt text-primary me-2"></i>Módulo de Farmacia</h4>
@@ -37,15 +36,12 @@
 <div class="modal fade" id="modalDetalleReceta" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 rounded-4 shadow-lg">
-
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title fw-bold"><i class="fas fa-file-medical me-2"></i>Despacho de Receta <span id="lblNumeroReceta"></span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body p-4 bg-light">
                 <input type="hidden" id="hdnRecetaID" />
-
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="text-muted small fw-bold text-uppercase">Paciente</label>
@@ -56,7 +52,6 @@
                         <h6 class="fw-bold mb-0 text-dark" id="lblMedico">--</h6>
                     </div>
                 </div>
-
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white fw-bold text-primary py-3">
                         <i class="fas fa-box-open me-2"></i>Productos a Entregar
@@ -69,7 +64,7 @@
                                     <th>Dosis</th>
                                     <th class="text-center">Cant.</th>
                                     <th>Indicaciones (Imprimir en viñeta)</th>
-                                    <th>Estado</th>
+                                    <th class="text-center">Estado</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -78,22 +73,44 @@
                     </div>
                 </div>
             </div>
-
             <div class="modal-footer bg-white border-top-0 pt-0 pb-3 pe-4">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
+        </div>
+    </div>
+</div>
 
+<!-- Modal de Confirmación de Entrega -->
+<div class="modal fade" id="modalConfirmarEntrega" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-4">
+                <div class="text-success mb-3">
+                    <i class="fas fa-hand-holding-medical fa-4x opacity-75"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-2">¿Confirmar Entrega?</h5>
+                <p class="text-muted small mb-4">¿Estás seguro de que deseas registrar la entrega de este medicamento al paciente?</p>
+
+                <!-- Campos ocultos para saber qué vamos a despachar -->
+                <input type="hidden" id="hdnDetalleConfirmar" />
+                <input type="hidden" id="hdnRecetaConfirmar" />
+
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-light border shadow-sm px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success shadow-sm px-4 fw-bold" onclick="ejecutarEntrega()">Sí, Entregar</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        $(document).ready(function () {
+       $(document).ready(function () {
             cargarRecetas();
         });
 
-        // Función para formatear la fecha que viene de C# a formato legible
         function formatearFecha(fechaJson) {
             if (!fechaJson) return "";
             var ms = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
@@ -102,22 +119,23 @@
                    ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
         }
 
-        // Llamada AJAX para llenar la tabla
         function cargarRecetas() {
             $.get('@Url.Action("Listar", "Recetas")', function (data) {
                 var html = "";
 
                 if(data.length === 0) {
-                    html = "<tr><td colspan='7' class='text-center py-4 text-muted'>No hay recetas registradas en el sistema.</td></tr>";
+                    html = "<tr><td colspan='7' class='text-center py-4 text-muted'>No hay recetas registradas.</td></tr>";
                 }
 
                 $.each(data, function (i, item) {
                     let badgeColor = "bg-secondary";
-                    if (item.Estado === "Emitida") badgeColor = "bg-warning text-dark"; // Pendiente
-                    if (item.Estado === "Dispensada") badgeColor = "bg-success"; // Ya se entregó la medicina
-                    if (item.Estado === "Vencida" || item.Estado === "Anulada") badgeColor = "bg-danger"; // Inválidas
+                    let estadoPrincipal = item.Estado ? item.Estado.toString().trim() : "Pendiente";
+                    let estadoEvaluar = estadoPrincipal.toLowerCase();
 
-                    // Botones de acción
+                    if (estadoEvaluar === "emitida" || estadoEvaluar === "pendiente") badgeColor = "bg-warning text-dark";
+                    if (estadoEvaluar === "dispensada" || estadoEvaluar === "despachada") badgeColor = "bg-success";
+                    if (estadoEvaluar === "vencida" || estadoEvaluar === "anulada") badgeColor = "bg-danger";
+
                     let btnDetalles = `<button class='btn btn-light btn-sm text-primary shadow-sm border me-1' title='Ver medicamentos' onclick='verDetalles(${item.RecetaID})'><i class='fas fa-eye'></i> Ver</button>`;
 
                     html += `<tr>
@@ -126,10 +144,8 @@
                         <td><h6 class='mb-0 fw-bold fs-6'>${item.PacienteNombre}</h6></td>
                         <td class='text-muted small'>Dr. ${item.MedicoNombre}</td>
                         <td><span class='badge bg-light text-dark border'>${item.TotalMedicamentos} prod.</span></td>
-                        <td><span class='badge ${badgeColor} px-2 py-1'>${item.Estado}</span></td>
-                        <td class='text-center pe-4'>
-                            ${btnDetalles}
-                        </td>
+                        <td><span class='badge ${badgeColor} px-2 py-1'>${estadoPrincipal}</span></td>
+                        <td class='text-center pe-4'>${btnDetalles}</td>
                     </tr>`;
                 });
 
@@ -137,7 +153,6 @@
             });
         }
 
-        // Función para abrir el modal y cargar los detalles de la receta
         function verDetalles(idReceta) {
             $.get('/Recetas/ConsultarDetalle?id=' + idReceta, function (res) {
                 if (res.success) {
@@ -154,15 +169,13 @@
                             nombreMed = "<span class='text-danger fw-bold'><i class='fas fa-exclamation-triangle'></i> MEDICAMENTO EXTERNO</span>";
                         }
 
-                        // LÓGICA DE BOTONES INDIVIDUALES
-                        let isDispensada = (item.Estado === "Dispensada" || item.Estado === true);
+                        // LÓGICA BOOLEANA DEFINITIVA: Si es true (1), está entregada.
+                        let isDispensada = (item.Estado === true || item.Estado === 'true' || item.Estado === 1);
 
                         let estadoHtml = "";
                         if (isDispensada) {
-                            // Si ya se entregó, mostramos viñeta verde
                             estadoHtml = `<span class="badge bg-success"><i class="fas fa-check-double me-1"></i> Entregado</span>`;
                         } else {
-                            // Si está pendiente, mostramos el botón para entregar esa pastilla específica
                             estadoHtml = `<button class="btn btn-sm btn-success shadow-sm" onclick="marcarDetalle(${item.DetalleID}, ${res.header.RecetaID})">
                                             <i class="fas fa-hand-holding-medical me-1"></i> Entregar
                                           </button>`;
@@ -185,25 +198,45 @@
             });
         }
 
-        //Entrega de Medicamento por Medicamento
         function marcarDetalle(idDetalle, idReceta) {
-            if (confirm("¿Confirmas la entrega de este medicamento específico al paciente?")) {
-                $.post(`/Recetas/DespacharDetalle?idDetalle=${idDetalle}&idReceta=${idReceta}`, function (res) {
-                    if (res.success) {
-                        if (res.completada) {
-                            // Si el servidor detectó que era la última pastilla que faltaba
-                            alert("¡Todos los medicamentos han sido entregados! La receta general se ha completado.");
-                            $('#modalDetalleReceta').modal('hide');
-                            cargarRecetas(); // Recargamos el panel maestro para ver la receta en verde
+
+            // 1. Lanzamos la pregunta hermosa
+            Swal.fire({
+                title: '¿Confirmar Entrega?',
+                text: "¿Estás seguro de registrar la entrega de este medicamento al paciente?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, Entregar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+
+                // 2. Si el farmacéutico le dio a "Sí"
+                if (result.isConfirmed) {
+                    $.post(`/Recetas/DespacharDetalle?idDetalle=${idDetalle}&idReceta=${idReceta}`, function (res) {
+                        if (res.success) {
+                            if (res.completada) {
+                                // Alerta de Receta 100% Finalizada
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Receta Completada!',
+                                    text: 'Todos los medicamentos han sido entregados.',
+                                    confirmButtonColor: '#198754'
+                                });
+                                $('#modalDetalleReceta').modal('hide');
+                                cargarRecetas();
+                            } else {
+                                // Aún faltan medicinas, recargamos el modal en silencio
+                                verDetalles(idReceta);
+                                cargarRecetas();
+                            }
                         } else {
-                            // Si aún faltan pastillas, solo recargamos el contenido de este modal
-                            verDetalles(idReceta);
+                            Swal.fire('Error', res.mensaje, 'error');
                         }
-                    } else {
-                        alert(res.mensaje);
-                    }
-                });
-            }
+                    });
+                }
+            });
         }
     </script>
 }

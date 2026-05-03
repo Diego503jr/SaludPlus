@@ -92,109 +92,163 @@
 </div>
 
 @section Scripts {
+    <!-- LIBRERÍA SWEETALERT2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         $(document).ready(function () {
-            cargarDatos();
+            cargarMedicamentos();
         });
 
-        function cargarDatos() {
+        // 1. CARGAR TABLA
+        function cargarMedicamentos() {
             $.get('@Url.Action("Listar", "Medicamentos")', function (data) {
-                var html = "";
+                let html = "";
                 $.each(data, function (i, item) {
 
-                    // Colores para el inventario
-                    let badgeStock = "bg-success";
-                    if (item.StockActual <= item.StockMinimo) badgeStock = "bg-warning text-dark";
-                    if (item.StockActual === 0) badgeStock = "bg-danger";
-
-                    // Si es el comodín, lo marcamos diferente visualmente
+                    let presentacion = item.Presentacion ? item.Presentacion : "No definida";
+                    let via = item.ViaAdministracion ? item.ViaAdministracion : "";
                     let esComodin = item.Nombre === "MEDICAMENTO EXTERNO (Solo texto)";
-                    let trClass = esComodin ? "table-primary" : "";
 
-                    let botones = "";
-                    if (!esComodin) {
-                        botones = `<button class='btn btn-light btn-sm text-primary me-1' onclick='abrirModal(${item.MedicamentoID})'><i class='fas fa-edit'></i></button>` +
-                                  `<button class='btn btn-light btn-sm text-danger' onclick='eliminar(${item.MedicamentoID})'><i class='fas fa-trash'></i></button>`;
+                    let filaClass = esComodin ? "table-primary fw-bold" : "";
+                    let stockBadge = esComodin ? `<span class="badge bg-success">∞</span>` :
+                                     (item.StockActual <= item.StockMinimo ? `<span class="badge bg-danger">${item.StockActual}</span>` : `<span class="badge bg-success">${item.StockActual}</span>`);
+
+                    let acciones = "";
+                    if (esComodin) {
+                        acciones = `<span class="badge bg-primary"><i class="fas fa-lock me-1"></i> Sistema</span>`;
                     } else {
-                        botones = `<span class='badge bg-primary'><i class='fas fa-lock'></i> Sistema</span>`;
+                        acciones = `
+                            <button class="btn btn-sm btn-outline-primary shadow-sm me-1" onclick="editarMedicamento(${item.MedicamentoID})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger shadow-sm" onclick="eliminarMedicamento(${item.MedicamentoID})"><i class="fas fa-trash"></i></button>
+                        `;
                     }
 
-                    html += `<tr class="${trClass}">
-                        <td class='ps-4 fw-bold'>${item.Nombre}</td>
-                        <td class='text-muted'>${item.Laboratorio || "-"}</td>
-                        <td>${item.Presentacion} <small class="text-muted">(${item.ViaAdministracion})</small></td>
-                        <td><span class='badge ${badgeStock} px-2 py-1 fs-6'>${esComodin ? "∞" : item.StockActual}</span></td>
-                        <td class='fw-bold text-success'>$${item.Precio.toFixed(2)}</td>
-                        <td class='text-center'>${botones}</td>
-                    </tr>`;
+
+                    let precioFormateado = parseFloat(item.Precio || 0).toFixed(2);
+
+                    html += `<tr class="${filaClass}">
+                                <td class="fw-bold">${item.Nombre}</td>
+                                <td class="text-muted">${item.Laboratorio || '-'}</td>
+                                <td>${presentacion} <small class="text-muted">(${via})</small></td>
+                                <td class="text-center">${stockBadge}</td>
+                                <td class="fw-bold text-success">$${precioFormateado}</td>
+                                <td class="text-center">${acciones}</td>
+                             </tr>`;
                 });
                 $("#tablaMedicamentos tbody").html(html);
             });
         }
 
-        function abrirModal(id) {
-            $("#txtId").val(0);
-            $("#txtNombre").val(''); $("#txtLaboratorio").val('');
-            $("#cboPresentacion").val('Tabletas'); $("#cboVia").val('Oral');
-            $("#txtStock").val(0); $("#txtMinimo").val(10); $("#txtPrecio").val('0.00');
-            $("#tituloModal").html("<i class='fas fa-plus-circle me-2'></i>Nuevo Medicamento");
+        // ABRIR MODAL PARA NUEVO MEDICAMENTO
+        function abrirModal() {
+            $("#txtId").val("0");
+            $("#txtNombre").val("");
+            $("#txtLaboratorio").val("");
+            $("#cboPresentacion").val("Tabletas");
+            $("#cboVia").val("Oral");
+            $("#txtStock").val("0");
+            $("#txtMinimo").val("10");
+            $("#txtPrecio").val("0.00");
 
-            if (id != null) {
-                $.get('/Medicamentos/Consultar?id=' + id, function (res) {
-                    if (res.success) {
-                        let data = res.data;
-                        $("#txtId").val(data.MedicamentoID);
-                        $("#txtNombre").val(data.Nombre);
-                        $("#txtLaboratorio").val(data.Laboratorio);
-                        $("#cboPresentacion").val(data.Presentacion);
-                        $("#cboVia").val(data.ViaAdministracion);
-                        $("#txtStock").val(data.StockActual);
-                        $("#txtMinimo").val(data.StockMinimo);
-                        $("#txtPrecio").val(data.Precio);
-                        $("#tituloModal").html("<i class='fas fa-edit me-2'></i>Editar Medicamento");
-                    }
-                });
-            }
-            $('#modalMedicamento').modal('show');
+            $("#tituloModal").html('<i class="fas fa-capsules me-2"></i>Nuevo Medicamento');
+            $("#modalMedicamento").modal('show');
         }
 
-        function guardar() {
-            let request = {
-                MedicamentoID: $("#txtId").val(),
-                Nombre: $("#txtNombre").val(),
-                Laboratorio: $("#txtLaboratorio").val(),
-                Presentacion: $("#cboPresentacion").val(),
-                ViaAdministracion: $("#cboVia").val(),
-                StockActual: $("#txtStock").val() || 0,
-                StockMinimo: $("#txtMinimo").val() || 0,
-                Precio: $("#txtPrecio").val() || 0
-            };
-
-            if (request.Nombre.trim() === "") {
-                alert("El nombre del medicamento es obligatorio.");
-                return;
-            }
-
-            $.post('@Url.Action("Guardar", "Medicamentos")', request, function (res) {
+        // 3. EDITAR MEDICAMENTO
+        function editarMedicamento(id) {
+            $.get('/Medicamentos/Consultar?id=' + id, function (res) {
                 if (res.success) {
-                    $('#modalMedicamento').modal('hide');
-                    cargarDatos();
+                    let m = res.data;
+
+                    $("#txtId").val(m.MedicamentoID);
+                    $("#txtNombre").val(m.Nombre);
+                    $("#txtLaboratorio").val(m.Laboratorio);
+                    $("#txtStock").val(m.StockActual);
+                    $("#txtMinimo").val(m.StockMinimo);
+
+                    let precioLimpio = parseFloat(m.Precio || 0).toFixed(2);
+                    $("#txtPrecio").val(precioLimpio);
+
+                    // Forzar opción en el Select de Vía si no existe
+                    if ($(`#cboVia option[value='${m.ViaAdministracion}']`).length === 0 && m.ViaAdministracion) {
+                        $("#cboVia").append(`<option value="${m.ViaAdministracion}">${m.ViaAdministracion}</option>`);
+                    }
+                    $("#cboVia").val(m.ViaAdministracion);
+
+                    // Forzar opción en el Select de Presentación si no existe
+                    if ($(`#cboPresentacion option[value='${m.Presentacion}']`).length === 0 && m.Presentacion) {
+                        $("#cboPresentacion").append(`<option value="${m.Presentacion}">${m.Presentacion}</option>`);
+                    }
+                    $("#cboPresentacion").val(m.Presentacion);
+
+                    $("#tituloModal").html('<i class="fas fa-edit me-2"></i>Editar Medicamento');
+                    $("#modalMedicamento").modal('show');
                 } else {
-                    alert("Error: " + res.mensaje);
+                    Swal.fire('Error', res.mensaje, 'error');
                 }
             });
         }
 
-        function eliminar(id) {
-            if (confirm("¿Está seguro de eliminar este medicamento?")) {
-                $.post('@Url.Action("Eliminar", "Medicamentos")?id=' + id, function (res) {
-                    if (res.success) {
-                        cargarDatos();
-                    } else {
-                        alert(res.mensaje);
-                    }
-                });
+        // 4. GUARDAR REGISTRO
+        function guardar() {
+            let nombre = $("#txtNombre").val().trim();
+            if (!nombre) {
+                Swal.fire('Atención', 'El nombre del medicamento es obligatorio.', 'warning');
+                return;
             }
+
+            let obj = {
+                MedicamentoID: $("#txtId").val(),
+                Nombre: nombre,
+                Laboratorio: $("#txtLaboratorio").val(),
+                Presentacion: $("#cboPresentacion").val(),
+                ViaAdministracion: $("#cboVia").val(),
+                StockActual: $("#txtStock").val(),
+                StockMinimo: $("#txtMinimo").val(),
+                Precio: $("#txtPrecio").val()
+            };
+
+            $.post('/Medicamentos/Guardar', obj, function (res) {
+                if (res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Guardado!',
+                        text: 'El medicamento se guardó correctamente.',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    $("#modalMedicamento").modal('hide');
+                    cargarMedicamentos();
+                } else {
+                    Swal.fire('Error', res.mensaje, 'error');
+                }
+            });
+        }
+
+        // 5. ELIMINAR CON SWEETALERT2
+        function eliminarMedicamento(id) {
+            Swal.fire({
+                title: '¿Eliminar Medicamento?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Medicamentos/Eliminar?id=' + id, function (res) {
+                        if (res.success) {
+                            Swal.fire('Eliminado!', 'El medicamento ha sido borrado.', 'success');
+                            cargarMedicamentos();
+                        } else {
+                            Swal.fire('No se puede eliminar', res.mensaje, 'error');
+                        }
+                    });
+                }
+            });
         }
     </script>
 }

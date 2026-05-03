@@ -1,5 +1,7 @@
-﻿@{
+﻿@using SaludPlus.Models
+@{
     ViewBag.Title = "Ficha Clínica";
+    var historial = ViewBag.HistorialPrevio as List<Consultas>;
 }
 
 <div class="container-fluid mt-4 px-4 mb-5">
@@ -11,11 +13,16 @@
         </a>
     </div>
 
+    <!-- PORTADA DEL EXPEDIENTE MÉDICO -->
     <div class="alert border-primary bg-primary-subtle d-flex align-items-center rounded-3 shadow-sm mb-4">
-        <i class="fas fa-user-injured fs-3 text-primary me-3"></i>
-        <div>
-            <h6 class="mb-0 fw-bold text-primary">Atendiendo a: @ViewBag.PacienteNombre</h6>
-            <small class="text-primary-emphasis"><i class="fas fa-exclamation-triangle text-warning me-1"></i>Verifique que el paciente en el consultorio coincida con este expediente.</small>
+        <i class="fas fa-id-card-alt fs-1 text-primary me-4"></i>
+        <div class="flex-grow-1">
+            <h5 class="mb-1 fw-bold text-primary">Paciente: @ViewBag.PacienteNombre</h5>
+            <div class="d-flex flex-wrap gap-3 mt-2 small text-dark">
+                <span><i class="fas fa-tint text-danger me-1"></i><strong>Sangre:</strong> @ViewBag.TipoSangre</span>
+                <span><i class="fas fa-allergies text-warning me-1"></i><strong>Alergias:</strong> @ViewBag.Alergias</span>
+                <span><i class="fas fa-notes-medical text-info me-1"></i><strong>Antecedentes:</strong> @ViewBag.Antecedentes</span>
+            </div>
         </div>
     </div>
 
@@ -25,9 +32,15 @@
             <input type="hidden" id="hdnConsultaID" value="@ViewBag.ConsultaID" />
             <input type="hidden" id="hdnCitaID" value="@ViewBag.CitaID" />
 
+            <!-- PESTAÑAS -->
             <ul class="nav nav-tabs nav-justified border-bottom-0 bg-light rounded-top-4 pt-2 px-2" id="fichaTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active fw-bold" id="evaluacion-tab" data-bs-toggle="tab" data-bs-target="#evaluacion" type="button" role="tab">
+                    <button class="nav-link active fw-bold text-primary" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historialPrevio" type="button" role="tab">
+                        <i class="fas fa-history me-1"></i> Historial Previo
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="evaluacion-tab" data-bs-toggle="tab" data-bs-target="#evaluacion" type="button" role="tab">
                         <i class="fas fa-user-md me-1"></i> Evaluación Clínica
                     </button>
                 </li>
@@ -45,7 +58,41 @@
 
             <div class="tab-content p-4" id="fichaTabsContent">
 
-                <div class="tab-pane fade show active" id="evaluacion" role="tabpanel">
+                <!-- PANEL 1: HISTORIAL PREVIO -->
+                <div class="tab-pane fade show active" id="historialPrevio" role="tabpanel">
+                    <h6 class="fw-bold text-dark mb-4"><i class="fas fa-notes-medical text-primary me-2"></i>Resumen de Consultas Anteriores</h6>
+
+                    @if (historial != null && historial.Count > 0)
+                    {
+                        <div class="row g-3">
+                            @foreach (var item in historial)
+                            {
+                                <div class="col-12">
+                                    <div class="card border-0 bg-light shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                                                <span class="fw-bold text-primary"><i class="fas fa-calendar-day me-2"></i>@item.FechaConsulta.ToString("dd/MM/yyyy HH:mm")</span>
+                                                <span class="badge bg-secondary"><i class="fas fa-user-md me-1"></i>Dr. @item.Medicos.Usuarios.Nombres @item.Medicos.Usuarios.Apellidos</span>
+                                            </div>
+                                            <p class="small mb-1"><strong class="text-dark">Motivo:</strong> @item.MotivoConsulta</p>
+                                            <p class="small mb-0 text-muted"><strong class="text-dark">Diagnóstico:</strong> @item.Diagnostico</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-folder-open fs-1 text-light mb-3 d-block"></i>
+                            Este paciente no tiene consultas previas en su historial.
+                        </div>
+                    }
+                </div>
+
+                <!-- PANEL 2: EVALUACIÓN CLÍNICA -->
+                <div class="tab-pane fade" id="evaluacion" role="tabpanel">
                     <div class="row g-4">
                         <div class="col-12">
                             <label class="form-label fw-bold small">Motivo de la Consulta <span class="text-danger">*</span></label>
@@ -64,6 +111,7 @@
                     </div>
                 </div>
 
+                <!-- PANEL 3: SIGNOS VITALES -->
                 <div class="tab-pane fade" id="signos" role="tabpanel">
                     <div class="row g-4">
                         <div class="col-md-3">
@@ -97,8 +145,8 @@
                     </div>
                 </div>
 
+                <!-- PANEL 4: RECETA Y TRATAMIENTO -->
                 <div class="tab-pane fade" id="tratamiento" role="tabpanel">
-
                     <h6 class="fw-bold text-success mb-3"><i class="fas fa-prescription-bottle-alt me-2"></i>Emitir Receta Médica</h6>
 
                     <div class="row g-3 bg-success-subtle p-3 rounded-3 border border-success-subtle mb-4">
@@ -159,10 +207,11 @@
                             <input type="date" id="txtProximaRevision" class="form-control shadow-sm">
                         </div>
                     </div>
-
                 </div>
+
             </div>
 
+            <!-- BOTÓN DE GUARDADO -->
             <div class="card-footer bg-white border-top p-4 text-end">
                 <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" onclick="guardarFicha()">
                     <i class="fas fa-save me-2"></i>Guardar y Finalizar Consulta
@@ -174,14 +223,27 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        var listaReceta = []; // Memoria temporal de la receta
+        var listaReceta = []; 
 
         $(document).ready(function () {
             cargarCatalogoMedicamentos();
+
+            // Verificamos si estamos abriendo un expediente existente para cargar sus datos
+            let consultaId = parseInt($("#hdnConsultaID").val()) || 0;
+            if (consultaId > 0) {
+                cargarDatosConsulta(consultaId);
+            }
+
+            //APLICAMOS EL BLOQUEO SI ES HISTORIAL VIEJO
+            let esSoloLectura = '@ViewBag.EsSoloLectura' === 'True';
+            if (esSoloLectura) {
+                aplicarModoLectura();
+            }
         });
 
-        // 1. Cargar el Select con AJAX
+        // FUNCIONES DE CARGA Y LECTURA
         function cargarCatalogoMedicamentos() {
             $.get('@Url.Action("Listar", "Medicamentos")', function (data) {
                 let html = '<option value="">-- Seleccione (Use "Medicamento Externo" si no está) --</option>';
@@ -192,7 +254,57 @@
             });
         }
 
-        // 2. Lógica del "Carrito"
+        function cargarDatosConsulta(id) {
+            $.get('/Consultas/Consultar?id=' + id, function (res) {
+                if (res.success) {
+                    let d = res.data;
+
+                    // Llenamos las cajitas de Evaluación
+                    $("#txtMotivo").val(d.MotivoConsulta);
+                    $("#txtExamenFisico").val(d.ExamenFisico);
+                    $("#txtDiagnostico").val(d.Diagnostico);
+
+                    // Llenamos Signos Vitales
+                    $("#txtPeso").val(d.PesoKg);
+                    $("#txtTalla").val(d.TallaCm);
+                    $("#txtPresion").val(d.PresionArterial);
+                    $("#txtTemp").val(d.Temperatura);
+
+                    // Llenamos Indicaciones Generales
+                    $("#txtIndicacionesGenerales").val(d.Indicaciones);
+
+                    // Formateamos y llenamos la fecha de Próxima Revisión
+                    if (d.ProximaRevision) {
+                        let ms = parseInt(d.ProximaRevision.replace("/Date(", "").replace(")/", ""));
+                        let fecha = new Date(ms);
+                        let mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
+                        let dia = ("0" + fecha.getDate()).slice(-2);
+                        $("#txtProximaRevision").val(fecha.getFullYear() + "-" + mes + "-" + dia);
+                    }
+                }
+            });
+        }
+
+        function aplicarModoLectura() {
+            // Deshabilitamos todos los inputs y textareas de Evaluación y Signos Vitales
+            $("#evaluacion input, #evaluacion textarea").prop("disabled", true);
+            $("#signos input, #signos textarea").prop("disabled", true);
+
+            //Ocultamos todo el panel de emitir nueva receta (el carrito)
+            $("#tratamiento .bg-success-subtle").hide();
+
+            //Ocultamos las columnas de "Acción" (Eliminar) en la tabla de medicinas
+            $("#tablaReceta thead th:last-child").hide();
+
+            // Deshabilitamos Indicaciones generales
+            $("#txtIndicacionesGenerales").prop("disabled", true);
+            $("#txtProximaRevision").prop("disabled", true);
+            $(".card-footer").hide();
+            $("h4.fw-bold").html('<i class="fas fa-history text-secondary me-2"></i>Historial de Expediente (Solo Lectura)');
+        }
+
+        // FUNCIONES DE RECETA (CARRITO)
+
         function agregarMedicamento() {
             let medId = $("#cboMedicamento").val();
             let nombre = $("#cboMedicamento option:selected").data("nombre");
@@ -251,9 +363,11 @@
             $("#tablaReceta tbody").html(html);
         }
 
-        // 3. GUARDADO FINAL TRANSACCIONAL
-        function guardarFicha() {
-            // Validaciones de UI
+        // ----------------------------------------------------
+        // GUARDADO FINAL TRANSACCIONAL
+        // ----------------------------------------------------
+function guardarFicha() {
+            // Validaciones
             let esValido = true;
             if(!$("#txtMotivo").val().trim()) {
                 $("#txtMotivo").addClass("is-invalid"); $("#errMotivo").removeClass("d-none"); esValido = false;
@@ -262,7 +376,12 @@
                 $("#txtDiagnostico").addClass("is-invalid"); $("#errDiagnostico").removeClass("d-none"); esValido = false;
             }
             if(!esValido) {
-                alert("Por favor, complete el Motivo y el Diagnóstico en la pestaña de Evaluación Clínica.");
+                // Alerta bonita de validación
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan Datos',
+                    text: 'Por favor, complete el Motivo y el Diagnóstico en la pestaña de Evaluación Clínica.'
+                });
                 new bootstrap.Tab(document.querySelector('#evaluacion-tab')).show();
                 return;
             }
@@ -283,13 +402,10 @@
                 ProximaRevision: $("#txtProximaRevision").val() || null
             };
 
-            // Empaquetar Consulta + Receta
             var payload = {
                 ConsultaData: requestConsulta,
                 ListaReceta: listaReceta
             };
-
-            console.log("Enviando Payload:", payload); // Por si ocupamos depurar en F12
 
             // Enviar a C#
             $.ajax({
@@ -299,15 +415,23 @@
                 contentType: "application/json; charset=utf-8",
                 success: function (response) {
                     if (response.success) {
-                        alert("¡Expediente guardado y Receta enviada a Farmacia con éxito!");
-                        window.location.href = '/Consultas/Index';
+                        // Alerta bonita de Éxito
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Guardado!',
+                            text: '¡Expediente guardado y Receta enviada a Farmacia con éxito!',
+                            confirmButtonColor: '#198754'
+                        }).then((result) => {
+                            // Cuando el doctor le da "OK", lo regresamos al panel
+                            window.location.href = '/Consultas/Index';
+                        });
                     } else {
-                        alert("Error al guardar: " + response.mensaje);
+                        // Alerta bonita de Error
+                        Swal.fire('Error', response.mensaje, 'error');
                     }
                 },
                 error: function(xhr, status, error) {
-                    alert("Error crítico de comunicación con el servidor.");
-                    console.error(xhr.responseText);
+                    Swal.fire('Error Crítico', 'Fallo de comunicación con el servidor.', 'error');
                 }
             });
         }
