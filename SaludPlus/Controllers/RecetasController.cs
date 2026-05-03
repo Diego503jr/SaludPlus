@@ -14,7 +14,6 @@ namespace SaludPlus.Controllers
             return View();
         }
 
-        //LISTAR LAS RECETAS PARA LA TABLA AJAX
         [HttpGet]
         public JsonResult Listar()
         {
@@ -24,15 +23,13 @@ namespace SaludPlus.Controllers
                     .Select(r => new
                     {
                         r.RecetaID,
-                        // Traemos los nombres cruzando las tablas
                         PacienteNombre = r.Pacientes.Nombres + " " + r.Pacientes.Apellidos,
                         MedicoNombre = r.Medicos.Usuarios.Nombres + " " + r.Medicos.Usuarios.Apellidos,
                         r.FechaEmision,
                         r.Estado,
-                        // Contamos cuántos medicamentos diferentes tiene esta receta
                         TotalMedicamentos = db.DetalleReceta.Count(d => d.RecetaID == r.RecetaID)
                     })
-                    .OrderByDescending(r => r.RecetaID) // Las más recientes primero
+                    .OrderByDescending(r => r.RecetaID)
                     .ToList();
 
                 return Json(lista, JsonRequestBehavior.AllowGet);
@@ -43,7 +40,6 @@ namespace SaludPlus.Controllers
             }
         }
 
-        //OBTENER LOS DETALLES DE UNA RECETA ESPECÍFICA
         [HttpGet]
         public JsonResult ConsultarDetalle(int id)
         {
@@ -83,7 +79,6 @@ namespace SaludPlus.Controllers
             }
         }
 
-        // DESPACHAR POR MEDICAMENTO INDIVIDUAL
         [HttpPost]
         public JsonResult DespacharDetalle(int idDetalle, int idReceta)
         {
@@ -92,17 +87,15 @@ namespace SaludPlus.Controllers
                 var detalle = db.DetalleReceta.Find(idDetalle);
                 if (detalle == null) return Json(new { success = false, mensaje = "El medicamento no existe en la receta." });
 
-                //Marcamos solo este detalle como entregado
+                // Cambiamos a entregado
                 detalle.Estado = true;
                 db.Entry(detalle).State = System.Data.Entity.EntityState.Modified;
                 db.SaveChanges();
 
-                // Buscamos si existe ALGÚN detalle de esta receta que NO esté dispensado
-                bool quedanPendientes = db.DetalleReceta.Any(d => d.RecetaID == idReceta && (d.Estado == null || d.Estado != true));
-
+                // Evaluamos si aún quedan items en false o null
+                bool quedanPendientes = db.DetalleReceta.Any(d => d.RecetaID == idReceta && (d.Estado == null || d.Estado == false));
                 bool recetaCompletadaAl100 = false;
 
-                // Si ya no hay pendientes, actualizamos la Receta principal a Dispensada
                 if (!quedanPendientes)
                 {
                     var recetaMaestra = db.Recetas.Find(idReceta);
@@ -111,7 +104,7 @@ namespace SaludPlus.Controllers
                         recetaMaestra.Estado = "Dispensada";
                         db.Entry(recetaMaestra).State = System.Data.Entity.EntityState.Modified;
                         db.SaveChanges();
-                        recetaCompletadaAl100 = true; // Avisamos a la vista que ya terminó
+                        recetaCompletadaAl100 = true;
                     }
                 }
 

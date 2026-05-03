@@ -11,42 +11,70 @@ namespace SaludPlus.Controllers
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();
 
-        // GET: Consultas
         public ActionResult Index()
         {
             return View();
         }
 
-        // GET: Consultas/Ficha
         public ActionResult Ficha(int? citaId, int? consultaId)
         {
             ViewBag.CitaID = citaId ?? 0;
             ViewBag.ConsultaID = consultaId ?? 0;
-            ViewBag.PacienteNombre = "Paciente Desconocido"; // Valor por defecto
 
-            // Si estamos abriendo una consulta que ya existe
-            if (consultaId.HasValue && consultaId > 0)
+            ViewBag.PacienteNombre = "Paciente Desconocido";
+            ViewBag.TipoSangre = "N/D";
+            ViewBag.Alergias = "Ninguna registrada";
+            ViewBag.Antecedentes = "Ninguno registrado";
+
+            int pacienteIdActual = 0;
+
+            ViewBag.EsSoloLectura = (consultaId.HasValue && consultaId.Value > 0);
+            // 1. Si estamos abriendo una consulta que ya existe
+            if (ViewBag.EsSoloLectura)
             {
                 var consulta = db.Consultas.Include(c => c.Pacientes).FirstOrDefault(c => c.ConsultaID == consultaId);
                 if (consulta != null)
                 {
+                    pacienteIdActual = consulta.PacienteID;
+
                     ViewBag.PacienteNombre = consulta.Pacientes.Nombres + " " + consulta.Pacientes.Apellidos;
+                    ViewBag.TipoSangre = string.IsNullOrEmpty(consulta.Pacientes.TipoSangre) ? "N/D" : consulta.Pacientes.TipoSangre;
+                    ViewBag.Alergias = string.IsNullOrEmpty(consulta.Pacientes.Alergias) ? "Ninguna registrada" : consulta.Pacientes.Alergias;
+                    ViewBag.Antecedentes = string.IsNullOrEmpty(consulta.Pacientes.AntecedentesMedicos) ? "Ninguno registrado" : consulta.Pacientes.AntecedentesMedicos;
                 }
             }
-            // Si estamos creando una consulta nueva a partir de una cita
+            // 2. Si estamos creando una consulta nueva a partir de una cita
             else if (citaId.HasValue && citaId > 0)
             {
                 var cita = db.Citas.Include(c => c.Pacientes).FirstOrDefault(c => c.CitaID == citaId);
                 if (cita != null)
                 {
+                    pacienteIdActual = cita.PacienteID;
+
                     ViewBag.PacienteNombre = cita.Pacientes.Nombres + " " + cita.Pacientes.Apellidos;
+                    ViewBag.TipoSangre = string.IsNullOrEmpty(cita.Pacientes.TipoSangre) ? "N/D" : cita.Pacientes.TipoSangre;
+                    ViewBag.Alergias = string.IsNullOrEmpty(cita.Pacientes.Alergias) ? "Ninguna registrada" : cita.Pacientes.Alergias;
+                    ViewBag.Antecedentes = string.IsNullOrEmpty(cita.Pacientes.AntecedentesMedicos) ? "Ninguno registrado" : cita.Pacientes.AntecedentesMedicos;
                 }
+            }
+
+            if (pacienteIdActual > 0)
+            {
+                var historial = db.Consultas
+                                  .Include("Medicos.Usuarios")
+                                  .Where(c => c.PacienteID == pacienteIdActual && c.ConsultaID != consultaId)
+                                  .OrderByDescending(c => c.FechaConsulta)
+                                  .ToList();
+                ViewBag.HistorialPrevio = historial;
+            }
+            else
+            {
+                ViewBag.HistorialPrevio = new List<Consultas>();
             }
 
             return View();
         }
 
-        // LISTAR CONSULTAS (Historial clínico general o filtrado por médico)
         public JsonResult Listar()
         {
             var consultas = db.Consultas
@@ -66,7 +94,6 @@ namespace SaludPlus.Controllers
             return Json(consultas, JsonRequestBehavior.AllowGet);
         }
 
-        // OBTENER DETALLES DE UNA CONSULTA ESPECÍFICA
         [HttpGet]
         public JsonResult Consultar(int id)
         {
@@ -91,19 +118,14 @@ namespace SaludPlus.Controllers
                     c.ProximaRevision
                 }).FirstOrDefault();
 
-            if (consulta == null)
-            {
-                return Json(new { success = false, mensaje = "Consulta no encontrada" }, JsonRequestBehavior.AllowGet);
-            }
+            if (consulta == null) return Json(new { success = false, mensaje = "Consulta no encontrada" }, JsonRequestBehavior.AllowGet);
 
             return Json(new { success = true, data = consulta }, JsonRequestBehavior.AllowGet);
         }
 
-        // GUARDAR CONSULTA Y GENERAR RECETA AUTOMÁTICAMENTE
         [HttpPost]
         public JsonResult Guardar(ConsultaFichaDTO payload)
         {
-            // Desempaquetamos los datos que vienen del JavaScript
             Consultas obj = payload.ConsultaData;
             List<DetalleRecetaDTO> listaMedicamentos = payload.ListaReceta;
 
@@ -113,12 +135,8 @@ namespace SaludPlus.Controllers
                 {
                     if (obj.ConsultaID == 0)
                     {
-                        // --- 1. GUARDAR LA CONSULTA ---
-                        // Validamos que no haya duplicados
                         if (db.Consultas.Any(c => c.CitaID == obj.CitaID))
-                        {
                             return Json(new { success = false, mensaje = "Esta cita ya tiene un expediente guardado." });
-                        }
 
                         obj.FechaConsulta = DateTime.Now;
 
@@ -135,9 +153,8 @@ namespace SaludPlus.Controllers
                         }
 
                         db.Consultas.Add(obj);
-                        db.SaveChanges(); // Guardamos para que se genere el ID de la Consulta
+                        db.SaveChanges();
 
-                        // --- 2. GENERAR LA RECETA 
                         if (listaMedicamentos != null && listaMedicamentos.Count > 0)
                         {
                             Recetas nuevaReceta = new Recetas
@@ -147,14 +164,13 @@ namespace SaludPlus.Controllers
                                 PacienteID = obj.PacienteID,
                                 FechaEmision = DateTime.Now,
                                 FechaVencimiento = DateTime.Now.AddDays(15),
-                                Estado = "Emitida", // Estado inicial para que Farmacia la vea amarilla
+                                Estado = "Emitida",
                                 Observaciones = "Generada desde Consultorio"
                             };
 
                             db.Recetas.Add(nuevaReceta);
-                            db.SaveChanges(); // Guardamos para generar el ID de la Receta
+                            db.SaveChanges();
 
-                            // --- 3. GUARDAR DETALLES Y DESCONTAR INVENTARIO ---
                             foreach (var item in listaMedicamentos)
                             {
                                 DetalleReceta detalle = new DetalleReceta
@@ -164,24 +180,20 @@ namespace SaludPlus.Controllers
                                     Dosis = item.Dosis,
                                     Cantidad = item.Cantidad,
                                     Indicaciones = item.Indicaciones,
-                                    Estado = true // Inicializado como pendiente de despachar
+                                    Estado = false 
                                 };
                                 db.DetalleReceta.Add(detalle);
 
-                                // Buscamos la medicina en la BD para bajarle el stock
                                 var medDB = db.Medicamentos.Find(item.MedicamentoID);
-
-                                // Si NO es el comodín de "Solo Texto", le restamos el inventario
                                 if (medDB != null && medDB.Nombre != "MEDICAMENTO EXTERNO (Solo texto)")
                                 {
                                     medDB.StockActual -= item.Cantidad;
                                     db.Entry(medDB).State = EntityState.Modified;
                                 }
                             }
-                            db.SaveChanges(); // Confirmamos los detalles y el nuevo stock
+                            db.SaveChanges();
                         }
 
-                        // --- 4. PROGRAMAR PRÓXIMA CITA AUTOMÁTICA ---
                         if (obj.ProximaRevision.HasValue)
                         {
                             Citas nuevaCita = new Citas
@@ -189,20 +201,18 @@ namespace SaludPlus.Controllers
                                 PacienteID = obj.PacienteID,
                                 MedicoID = obj.MedicoID,
                                 FechaCita = obj.ProximaRevision.Value,
-                                HoraCita = new TimeSpan(8, 0, 0), // Hora por defecto (8:00 AM)
+                                HoraCita = new TimeSpan(8, 0, 0),
                                 Motivo = "Cita de Control / Seguimiento",
-                                Estado = "Pendiente", 
-                                Observaciones = "Generada automáticamente desde el consultorio por Próxima Revisión.",
+                                Estado = "Pendiente",
+                                Observaciones = "Generada automáticamente desde el consultorio.",
                                 FechaCreacion = DateTime.Now
                             };
-
                             db.Citas.Add(nuevaCita);
                             db.SaveChanges();
                         }
                     }
                     else
                     {
-                        // ACTUALIZAR CONSULTA EXISTENTE (No tocamos la receta para evitar descuadres de inventario)
                         var data = db.Consultas.Find(obj.ConsultaID);
                         if (data == null) return Json(new { success = false, mensaje = "El registro no existe." });
 
@@ -231,17 +241,12 @@ namespace SaludPlus.Controllers
             }
         }
 
-        // OBTENER CITAS PENDIENTES DEL DÍA 
         [HttpGet]
         public JsonResult ObtenerCitasPendientes()
         {
             DateTime hoy = DateTime.Today;
-
             var citasDelDia = db.Citas
-                // Filtramos por estado y aseguramos que la fecha coincida exactamente con hoy
-                .Where(c => (c.Estado == "Confirmada" || c.Estado == "Pendiente")
-                            && DbFunctions.TruncateTime(c.FechaCita) == hoy)
-                // Ordenamos por hora para que el médico vea la agenda en orden lógico
+                .Where(c => (c.Estado == "Confirmada" || c.Estado == "Pendiente") && DbFunctions.TruncateTime(c.FechaCita) == hoy)
                 .OrderBy(c => c.HoraCita)
                 .Select(c => new
                 {
@@ -251,23 +256,17 @@ namespace SaludPlus.Controllers
                     Nombres = c.Pacientes.Nombres + " " + c.Pacientes.Apellidos,
                     Motivo = c.Motivo,
                     Hora = c.HoraCita
-                })
-                .ToList(); // Lo traemos a memoria
+                }).ToList();
 
-            // Formateamos el texto en memoria para evitar errores de traducción a SQL
             var listadoFormateado = citasDelDia.Select(c => new
             {
                 Id = c.Id,
-                // Agregamos la hora al inicio para que se vea claro en el ComboBox
                 Texto = $"[{c.Hora}] Cita #{c.Id} - {c.Nombres} ({c.Motivo})"
             }).ToList();
 
             return Json(listadoFormateado, JsonRequestBehavior.AllowGet);
         }
 
-        // =======================================================
-        // DTOs: Clases auxiliares para recibir la Ficha + Receta
-        // =======================================================
         public class ConsultaFichaDTO
         {
             public Consultas ConsultaData { get; set; }
