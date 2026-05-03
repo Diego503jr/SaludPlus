@@ -31,6 +31,10 @@ namespace SaludPlus.Controllers
 
             if (info != null)
             {
+                info.UltimoAcceso = DateTime.Now;
+                db.Entry(info).State = EntityState.Modified;
+                db.SaveChanges();
+
                 Session["User"] = info;
                 return Json(new { success = true, url = Url.Action("Index", "Home") });
             }

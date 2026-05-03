@@ -1,0 +1,483 @@
+﻿@{
+    ViewBag.Title = "Gestión de Usuarios";
+}
+
+<link href="@Url.Content("~/Content/styles/Admin.css")" rel="stylesheet" />
+
+@* Estructura de tabla *@
+<div class="container-fluid mt-4 px-4">
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <h5 class="fw-bold mb-0 text-dark text-center text-md-start">Gestión de Usuarios</h5>
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-primary btn-sm px-3" onclick="abrirModal(null)">
+                    <i class="bi bi-person-plus-fill me-1"></i> Agregar Usuario
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle table-nowrap mb-0" id="tablaUsuarios">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4 text-muted">Usuario</th>
+                        <th class="text-muted">Email</th>
+                        <th class="text-muted">Teléfono</th>
+                        <th class="text-muted">Rol</th>
+                        <th class="text-muted">Último Acceso</th>
+                        <th class="text-muted">Estado</th>
+                        <th class="text-muted pe-4 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* Modal para registro/modificación de Usuarios *@
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+            <div class="modal-header bg-dark text-white border-0 py-3 px-4">
+                <h6 class="modal-title d-flex align-items-center fw-bold">
+                    <i class="bi bi-person-badge-fill me-2 fs-5"></i>
+                    GESTIÓN DE USUARIO
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                @Html.Hidden("txtIdUsuario", "0")
+
+                <div class="container-fluid py-4 px-4 bg-light-subtle">
+                    <div class="row g-3">
+
+                        @* Nombres *@
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtNombres", null, new { @class = "form-control border-0 px-3", placeholder = "Nombres" })
+                                <label class="small text-muted"><i class="bi bi-person me-1"></i>Nombres</label>
+                            </div>
+                        </div>
+
+                        @* Apellidos *@
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtApellidos", null, new { @class = "form-control border-0 px-3", placeholder = "Apellidos" })
+                                <label class="small text-muted"><i class="bi bi-person me-1"></i>Apellidos</label>
+                            </div>
+                        </div>
+
+                        @* Email *@
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtEmail", null, new { @class = "form-control border-0 px-3", placeholder = "Email", type = "email" })
+                                <label class="small text-muted"><i class="bi bi-envelope me-1"></i>Email</label>
+                            </div>
+                        </div>
+
+                        @* Teléfono *@
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                @Html.TextBox("txtTelefono", null, new { @class = "form-control border-0 px-3", placeholder = "Teléfono" })
+                                <label class="small text-muted"><i class="bi bi-telephone me-1"></i>Teléfono</label>
+                            </div>
+                        </div>
+
+                        @* Contraseña *@
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                <input type="password" id="txtPassword" class="form-control border-0 px-3" placeholder="Contraseña" />
+                                <label class="small text-muted"><i class="bi bi-lock me-1"></i>Contraseña</label>
+                            </div>
+                        </div>
+
+                        @* Rol *@
+                        <div class="col-md-6">
+                            <div class="form-floating shadow-sm">
+                                <select id="cboRol" class="form-select border-0 px-3">
+                                    <option value="">Seleccione un rol...</option>
+                                </select>
+                                <label class="small text-muted"><i class="bi bi-shield-lock me-1"></i>Rol</label>
+                            </div>
+                        </div>
+
+                        @* Estado *@
+                        <div class="col-md-12">
+                            <div class="card shadow-sm border-0 d-flex flex-row align-items-center justify-content-start bg-white px-4 py-3 gap-3">
+                                <div class="form-check form-switch p-0 m-0 d-flex align-items-center gap-3">
+                                    <input class="form-check-input ms-0" type="checkbox" role="switch" id="chkActivo" checked
+                                           style="width: 2.5em; height: 1.25em; cursor: pointer;">
+                                    <label class="form-check-label small fw-bold text-success" for="chkActivo" id="lblEstadoTexto">ACTIVO</label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            @* Acciones *@
+            <div class="modal-footer bg-white border-0 py-3 px-4">
+                <button type="button" class="btn btn-link text-muted text-decoration-none fw-semibold" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" onclick="guardar()">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* Modal para ver detalles del Usuario por ID *@
+<div class="modal fade" id="modalDetallesUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+            <div class="modal-header bg-dark text-white py-3 px-4 border-0">
+                <h6 class="modal-title fw-bold text-uppercase mb-0">
+                    <i class="bi bi-person-vcard me-2"></i>Perfil del Usuario
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                @* Fila Principal: Nombre y Estado *@
+                <div class="row align-items-center mb-4 g-3">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
+                                <i class="bi bi-person-fill text-primary fs-3"></i>
+                            </div>
+                            <div>
+                                <h3 class="fw-bold mb-0 text-dark">
+                                    <span id="lblNombreUsuario"></span> <span id="lblApellidoUsuario"></span>
+                                </h3>
+                                <div class="d-flex gap-2 align-items-center mt-1">
+                                    <span class="text-muted small">| ID: <span id="lblIdUsuario"></span></span>
+                                    <span class="text-muted small">| Fecha Creación: <span id="lblFechaCreacion"></span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end text-start">
+                        <label class="d-block small text-muted fw-bold mb-1">ESTADO</label>
+                        <div id="statusUsuario"></div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    @* Contacto *@
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 bg-light shadow-sm">
+                            <div class="card-body p-3">
+                                <p class="small fw-bold text-uppercase mb-3 border-bottom pb-1">Información de Contacto</p>
+                                <div class="mb-3">
+                                    <label class="d-block small text-muted"><i class="bi bi-envelope me-1"></i>Email</label>
+                                    <div id="lblEmailDetalle" class="small text-dark fw-bold text-truncate"></div>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="d-block small text-muted"><i class="bi bi-telephone me-1"></i>Teléfono</label>
+                                    <strong id="lblTelefonoDetalle" class="text-dark"></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Acceso *@
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0 bg-light shadow-sm">
+                            <div class="card-body p-3">
+                                <p class="small fw-bold text-uppercase mb-3 border-bottom pb-1">Información de Acceso</p>
+                                <div class="mb-3">
+                                    <label class="d-block small text-muted"><i class="bi bi-clock-history me-1"></i>Último Acceso</label>
+                                    <strong id="lblUltimoAcceso" class="text-dark"></strong>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="d-block small text-muted"><i class="bi bi-shield-lock me-1"></i>Rol asignado</label>
+                                    <strong id="lblRolDetalle2" class="text-dark"></strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-white border-0 py-3">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal Confirmar Baja de Usuario *@
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+            <div class="modal-header bg-danger text-white py-3 px-4 border-0">
+                <h6 class="modal-title fw-bold small text-uppercase mb-0">
+                    <i class="bi bi-exclamation-octagon me-2"></i>Confirmar Baja
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <i class="bi bi-person-x-fill text-danger" style="font-size: 4rem; opacity: 0.8;"></i>
+                </div>
+
+                <h5 class="fw-bold text-dark">¿Desactivar este usuario?</h5>
+                <p class="text-muted small px-3">El usuario perderá acceso al sistema.</p>
+
+                @* Tarjeta de Resumen del Usuario *@
+                <div class="row g-0 border rounded-3 text-start mt-4 shadow-sm overflow-hidden">
+                    <div class="col-3 bg-light border-end d-flex flex-column justify-content-center align-items-center p-2">
+                        <small class="text-muted fw-bold text-uppercase" style="font-size: 0.65rem;">ID Usuario</small>
+                        <span class="h5 fw-bold text-danger mb-0" id="EliminarId"></span>
+                    </div>
+                    <div class="col-9 p-3 bg-white">
+                        <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.65rem;">Nombre del Usuario</small>
+                        <h6 class="fw-bold mb-1">
+                            <span id="EliminarNombre"></span> <span id="EliminarApellido"></span>
+                        </h6>
+                        <div class="d-flex align-items-center">
+                            <span id="EliminarEmail" class="text-secondary small fw-semibold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                @* Campo oculto para el ID *@
+                <input type="hidden" id="hiddenIdEliminar" />
+            </div>
+
+            <div class="modal-footer bg-light py-3 border-top-0 d-flex justify-content-between px-4">
+                <button type="button" class="btn btn-link text-muted text-decoration-none fw-bold small" data-bs-dismiss="modal">
+                    CANCELAR
+                </button>
+                <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" onclick="confirmarEliminar()">
+                    <i class="bi bi-trash3 me-1"></i> Confirmar Baja
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            cargarDatos();
+            cargarRoles();
+        });
+
+        document.getElementById('chkActivo').addEventListener('change', function () {
+            const lbl = document.getElementById('lblEstadoTexto');
+            if (this.checked) {
+                lbl.innerText = "ACTIVO";
+                lbl.className = "form-check-label small fw-bold text-success";
+            } else {
+                lbl.innerText = "INACTIVO";
+                lbl.className = "form-check-label small fw-bold text-danger";
+            }
+        });
+
+        // CARGAR TABLA DE USUARIOS
+        function cargarDatos() {
+            $.ajax({
+                url: '@Url.Action("Listar", "Usuarios")',
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    var html = "";
+                    if (!data || data.length === 0) {
+                        html = "<tr><td colspan='7' class='text-center py-4 text-muted'>No hay registros</td></tr>";
+                    } else {
+                        $.each(data, function (i, item) {
+                            let badgeColor = item.Activo ? "bg-success" : "bg-danger";
+                            let estadoTexto = item.Activo ? "Activo" : "Inactivo";
+                            let ultimoAcceso = item.UltimoAcceso ? formatearFecha(item.UltimoAcceso) : "---";
+                            let rolNombre = item.RolNombre || "Sin rol";
+
+                            let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
+
+                            html += "<tr>" +
+                                "<td class='ps-4'>" +
+                                    "<div class='d-flex align-items-center gap-2' style='min-width: 160px;'>" +
+                                        "<div class='rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center' style='width:36px;height:36px;min-width:36px;'>" +
+                                            "<i class='bi bi-person-fill text-primary' style='font-size:1rem;'></i>" +
+                                        "</div>" +
+                                        "<div>" +
+                                            "<span class='fw-bold text-dark d-block lh-sm'>" + item.Nombres + " " + item.Apellidos + "</span>" +
+                                        "</div>" +
+                                    "</div>" +
+                                "</td>" +
+                                "<td><span class='text-muted small'>" + (item.Email || "---") + "</span></td>" +
+                                "<td><span class='text-muted small text-nowrap'>" + (item.Telefono || "---") + "</span></td>" +
+                                "<td><span class='badge bg-light text-dark border fw-normal'>" + rolNombre + "</span></td>" +
+                                "<td><span class='text-muted small text-nowrap'>" + ultimoAcceso + "</span></td>" +
+                                "<td><span class='badge " + badgeColor + " py-2 fw-bold d-inline-block text-center' style='font-size:0.75rem;width:80px;'>" + estadoTexto + "</span></td>" +
+                                "<td class='pe-4 text-center'>" +
+                                    "<div class='btn-group shadow-sm'>" +
+                                        "<button class='btn btn-light btn-sm border-end text-primary' onclick='abrirModal(" + itemString + ")'><i class='bi bi-pencil'></i></button>" +
+                                        "<button class='btn btn-light btn-sm border-end text-secondary' onclick='consultarDetalles(" + item.UsuarioID + ")'><i class='bi bi-eye'></i></button>" +
+                                        "<button class='btn btn-light btn-sm text-danger' onclick='eliminar(" + item.UsuarioID + ")'><i class='bi bi-person-x'></i></button>" +
+                                    "</div>" +
+                                "</td>" +
+                            "</tr>";
+                        });
+                    }
+                    $("#tablaUsuarios tbody").html(html);
+                }
+            });
+        }
+
+        // CARGAR ROLES EN SELECT
+        function cargarRoles() {
+            $.get('@Url.Action("ObtenerRoles", "Usuarios")', function (data) {
+                let html = '<option value="">Seleccione un rol...</option>';
+                $.each(data, function (i, item) {
+                    html += `<option value="${item.Id}">${item.Nombre}</option>`;
+                });
+                $("#cboRol").html(html);
+            });
+        }
+
+        // ABRIR MODAL (AGREGAR / EDITAR)
+        function abrirModal(usuario) {
+            const lblEstado = $("#lblEstadoTexto");
+
+            if (usuario == null) {
+                $("#txtIdUsuario").val(0);
+                $("#txtNombres").val("");
+                $("#txtApellidos").val("");
+                $("#txtEmail").val("");
+                $("#txtTelefono").val("");
+                $("#txtPassword").val("");
+                $("#cboRol").val("");
+                $("#chkActivo").prop("checked", true);
+                lblEstado.text("ACTIVO").removeClass("text-danger").addClass("text-success");
+            } else {
+                $("#txtIdUsuario").val(usuario.UsuarioID);
+                $("#txtNombres").val(usuario.Nombres);
+                $("#txtApellidos").val(usuario.Apellidos);
+                $("#txtEmail").val(usuario.Email);
+                $("#txtTelefono").val(usuario.Telefono);
+                $("#txtPassword").val("");   // No se pre-llena por seguridad
+
+                $("#chkActivo").prop("checked", usuario.Activo);
+                if (usuario.Activo) {
+                    lblEstado.text("ACTIVO").removeClass("text-danger").addClass("text-success");
+                } else {
+                    lblEstado.text("INACTIVO").removeClass("text-success").addClass("text-danger");
+                }
+
+                // Asignar rol si existe
+                if (usuario.RolID) {
+                    setTimeout(function () { $("#cboRol").val(usuario.RolID); }, 150);
+                } else {
+                    $("#cboRol").val("");
+                }
+            }
+
+            $('#modalUsuario').modal('show');
+        }
+
+        // GUARDAR USUARIO
+        function guardar() {
+            var request = {
+                UsuarioID: parseInt($("#txtIdUsuario").val()),
+                Nombres: $("#txtNombres").val(),
+                Apellidos: $("#txtApellidos").val(),
+                Email: $("#txtEmail").val(),
+                Telefono: $("#txtTelefono").val(),
+                PasswordHash: $("#txtPassword").val(),
+                RolID: $("#cboRol").val(),
+                Activo: $("#chkActivo").prop("checked")
+            };
+
+            $.ajax({
+                url: '@Url.Action("Guardar", "Usuarios")',
+                type: "POST",
+                data: JSON.stringify(request),
+                contentType: "application/json; charset=utf-8",
+                success: function (response) {
+                    if (response.success) {
+                        $('#modalUsuario').modal('hide');
+                        cargarDatos();
+                    } else {
+                        alert(response.message || response.mensaje);
+                    }
+                }
+            });
+        }
+
+        // PREPARAR MODAL ELIMINAR
+        function eliminar(id) {
+            $.get('@Url.Action("Consultar", "Usuarios")', { id: id }, function (response) {
+                if (response.success) {
+                    var u = response.data[0];
+                    $("#EliminarNombre").text(u.Nombres);
+                    $("#EliminarApellido").text(u.Apellidos);
+                    $("#EliminarEmail").text(u.Email);
+                    $("#EliminarId").text(u.UsuarioID);
+                    $("#hiddenIdEliminar").val(u.UsuarioID);
+                    $("#modalEliminar").modal("show");
+                }
+            });
+        }
+
+        // CONFIRMAR BAJA
+        function confirmarEliminar() {
+            var id = $("#hiddenIdEliminar").val();
+            $.post('@Url.Action("Eliminar", "Usuarios")', { id: id }, function (response) {
+                if (response.success) {
+                    $("#modalEliminar").modal("hide");
+                    cargarDatos();
+                } else {
+                    alert(response.mensaje);
+                }
+            });
+        }
+
+        // VER DETALLES
+        function consultarDetalles(id) {
+            $.get('@Url.Action("Consultar", "Usuarios")', { id: id }, function (response) {
+                if (response.success) {
+                    var u = response.data[0];
+                    $("#lblNombreUsuario").text(u.Nombres);
+                    $("#lblApellidoUsuario").text(u.Apellidos);
+                    $("#lblIdUsuario").text(u.UsuarioID);
+                    $("#lblFechaCreacion").text(u.FechaCreacion ? formatearFecha(u.FechaCreacion) : "---");
+                    $("#lblEmailDetalle").text(u.Email || "---");
+                    $("#lblTelefonoDetalle").text(u.Telefono || "---");
+                    $("#lblUltimoAcceso").text(u.UltimoAcceso ? formatearFecha(u.UltimoAcceso) : "---");
+
+                    // Rol desde la propiedad de navegación
+                    var rolNombre = u.RolNombre || "Sin rol";
+                    $("#lblRolDetalle2").text(rolNombre);
+
+                    let statusHtml = u.Activo
+                        ? '<span class="badge bg-success fs-6 w-100 py-2">ACTIVO</span>'
+                        : '<span class="badge bg-danger fs-6 w-100 py-2">INACTIVO</span>';
+                    $("#statusUsuario").html(statusHtml);
+
+                    $("#modalDetallesUsuario").modal("show");
+                }
+            });
+        }
+
+        // FORMATEAR FECHA DESDE JSON /Date(ticks)/
+        function formatearFecha(valor) {
+            if (!valor) return "---";
+            var match = /\/Date\((\d+)\)\//.exec(valor);
+            if (match) {
+                var d = new Date(parseInt(match[1]));
+                return d.toLocaleDateString('es-SV') + ' ' + d.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' });
+            }
+            return valor;
+        }
+    </script>
+}
