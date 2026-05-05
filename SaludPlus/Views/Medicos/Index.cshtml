@@ -9,11 +9,17 @@
 <div class="container-fluid mt-4 px-4">
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-            <h5 id="tituloVista" class="fw-bold mb-0 text-dark text-center text-md-start">Agenda de Citas</h5>
+            <h5 id="tituloVista" class="fw-bold mb-0 text-dark text-center text-md-start">Directorio Médico</h5>
 
             <div class="d-flex gap-2 justify-content-center">
-                <button class="btn btn-primary btn-sm px-3" onclick="abrirModal(null)">
-                    <i class="bi bi-person-plus-fill me-1"></i> Agregar Médico
+                <button id="btnAgregar" class="btn btn-primary btn-sm px-3 shadow-sm" onclick="abrirModal(null)">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar
+                </button>
+                <button class="btn btn-outline-secondary btn-sm px-3" onclick="cargarDatosHistorial()">
+                    <i class="fas fa-history me-1"></i> Historial
+                </button>
+                <button class="btn btn-light btn-sm px-2 border shadow-sm" onclick="cargarDatos()" title="Refrescar">
+                    <i class="fas fa-arrow-left text-primary"></i>
                 </button>
             </div>
         </div>
@@ -95,7 +101,7 @@
                         @* Número de Licencia *@
                         <div class="col-md-6">
                             <div class="form-floating shadow-sm">
-                                @Html.TextBox("txtNumeroLicencia", null, new { @class = "form-control border-0 px-3", placeholder = "Licencia" })
+                                @Html.TextBox("txtNumeroLicencia", null, new { @class = "form-control border-0 px-3", placeholder = "Licencia", inputmode = "numeric",maxlength="7"})
                                 <label class="small text-muted"><i class="bi bi-card-text me-1"></i>Número de Licencia</label>
                             </div>
                         </div>
@@ -295,9 +301,22 @@
 
 @section Scripts {
     <script>
+        let vistaActual = "ACTIVOS";
+
         $(document).ready(function () {
             cargarDatos();
             cargarSelects();
+
+            $("#txtNumeroLicencia").on("input", function () {
+                let valor = $(this).val().replace(/\D/g, "");
+
+                if (valor.length > 7) {
+                    valor = valor.substring(0, 7);
+                }
+
+                $(this).val(valor);
+            });
+
         });
 
         document.getElementById('chkActivo').addEventListener('change', function () {
@@ -311,71 +330,80 @@
             }
         });
 
-        // FUNCIÓN PARA CARGAR INFORMACIÓN DE MÉDICOS (TABLA)
-       function cargarDatos() {
+        //CARGAR MÉDICOS ACTIVOS
+        function cargarDatos() {
+            vistaActual = "ACTIVOS";
+            $("#btnAgregar").prop("disabled", false); // Habilitar botón agregar
+            $("#tituloVista").text("Listado de Médicos");
+
+            ejecutarCarga('@Url.Action("Listar", "Medicos")');
+        }
+
+        //CARGAR HISTORIAL (INACTIVOS)
+        function cargarDatosHistorial() {
+            vistaActual = "HISTORIAL";
+            $("#btnAgregar").prop("disabled", true); // Deshabilitar agregar en historial
+            $("#tituloVista").text("Historial de Médicos Inactivos");
+
+            ejecutarCarga('@Url.Action("ListarHistorial", "Medicos")');
+        }
+
+        // Función auxiliar para evitar repetir código de AJAX
+        function ejecutarCarga(urlDestino) {
+            $("#tablaMedicos tbody").html("<tr><td colspan='7' class='text-center py-4'><div class='spinner-border spinner-border-sm text-primary'></div> Cargando...</td></tr>");
+
             $.ajax({
-                url: '@Url.Action("Listar", "Medicos")',
+                url: urlDestino,
                 type: "GET",
                 dataType: "json",
                 success: function (data) {
-                    var html = "";
-                    if (!data || data.length === 0) {
-                        html = "<tr><td colspan='7' class='text-center py-4 text-muted'>No hay registros</td></tr>";
-                    } else {
-                        $.each(data, function (i, item) {
-                            let badgeColor = item.Activo ? "bg-success" : "bg-danger";
-                            let estadoTexto = item.Activo ? "Disponible" : "Ocupado";
-
-                            let entrada = formatearHoraJS(item.HoraEntrada);
-                            let salida = formatearHoraJS(item.HoraSalida);
-                            let horarioFull = entrada + " - " + salida;
-
-                            let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
-
-                            html += "<tr>" +
-                                "<td class='ps-4'>" +
-                                "<div class='d-flex flex-column' style='min-width: 150px;'>" +
-                                    "<span class='fw-bold text-dark lh-sm'>" + item.MedicoNombre + "</span>" +
-                                    "<span class='fw-bold text-dark lh-sm'>" + item.MedicoApellido + "</span>" +
-                                    "<small class='text-muted mt-1' style='font-size: 0.75rem;'>Lic: " + item.NumeroLicencia + "</small>" +
-                                "</div>" +
-                                "</td>" +
-
-                                "<td>" +
-                                "<span class='badge bg-light text-dark border fw-normal text-nowrap'><i class='bi bi-clock me-1'></i>" + horarioFull + "</span>" +
-                                "</td>" +
-
-                                "<td><span class='fw-semibold text-nowrap'>" + item.MedicoEspecialidad + "</span></td>" +
-
-                                "<td>" +
-                                "<div class='text-nowrap' style='min-width: 110px;'>" +
-                                     (item.Consultorio || "N/A") +
-                                "</div>" +
-                                "</td>" +
-
-                                "<td>" +
-                                "<div class='text-muted text-nowrap' style='min-width: 110px;'>" +
-                                    (item.MedicoTelefono || "---") +
-                                "</div>" +
-                                "</td>" +
-
-                                "<td>" +
-                                "<span class='badge " + badgeColor + " py-2 fw-bold d-inline-block text-center' style='font-size: 0.75rem; width: 90px;'>" + estadoTexto + "</span>" +
-                                "</td>" +
-
-                                "<td class='pe-4 text-center'>" +
-                                "<div class='btn-group shadow-sm'>" +
-                                    "<button class='btn btn-light btn-sm border-end text-primary' onclick='abrirModal(" + itemString + ")'><i class='bi bi-pencil'></i></button>" +
-                                    "<button class='btn btn-light btn-sm border-end text-secondary' onclick='consultarDetalles(" + item.MedicoID + ")'><i class='bi bi-eye'></i></button>" +
-                                    "<button class='btn btn-light btn-sm text-danger' onclick='eliminar(" + item.MedicoID + ")'><i class='bi bi-person-x'></i></button>" +
-                                "</div>" +
-                                "</td>" +
-                                "</tr>";
-                        });
-                    }
-                    $("#tablaMedicos tbody").html(html);
+                    llenarTabla(data);
                 }
             });
+        }
+
+        // FUNCIÓN PARA CARGAR INFORMACIÓN DE MÉDICOS (TABLA)
+        function llenarTabla(data) {
+            var html = "";
+
+            const esHistorial = (vistaActual === "HISTORIAL");
+            const disabledAttr = esHistorial ? "disabled" : "";
+            const opacityClass = esHistorial ? "opacity-50" : "";
+
+            if (!data || data.length === 0) {
+                html = "<tr><td colspan='7' class='text-center py-4 text-muted'>No hay registros en esta sección</td></tr>";
+            } else {
+                $.each(data, function (i, item) {
+                    let badgeColor = item.Activo ? "bg-success" : "bg-danger";
+                    let estadoTexto = item.Activo ? "Disponible" : "Ocupado";
+
+                    let entrada = formatearHoraJS(item.HoraEntrada);
+                    let salida = formatearHoraJS(item.HoraSalida);
+                    let itemString = JSON.stringify(item).replace(/"/g, '&quot;');
+
+                    html += `<tr>
+                        <td class='ps-4'>
+                            <div class='d-flex flex-column'>
+                                <span class='fw-bold text-dark'>${item.MedicoNombre} ${item.MedicoApellido}</span>
+                                <small class='text-muted'>J.V.P.M: ${item.NumeroLicencia}</small>
+                            </div>
+                        </td>
+                        <td><span class='badge bg-light text-dark border'><i class='bi bi-clock me-1'></i>${entrada} - ${salida}</span></td>
+                        <td><span class='fw-semibold'>${item.MedicoEspecialidad}</span></td>
+                        <td>${item.Consultorio || "N/A"}</td>
+                        <td><span class='text-muted'>${item.MedicoTelefono || "---"}</span></td>
+                        <td><span class='badge ${badgeColor} py-2 fw-bold' style='width: 90px;'>${estadoTexto}</span></td>
+                        <td class='pe-4 text-center'>
+                            <div class='btn-group shadow-sm'>
+                                <button class='btn btn-light btn-sm text-primary' ${disabledAttr} onclick='abrirModal(${itemString})'><i class='bi bi-pencil'></i></button>
+                                <button class='btn btn-light btn-sm text-secondary' ${disabledAttr} onclick='consultarDetalles(${item.MedicoID})'><i class='bi bi-eye'></i></button>
+                                <button class='btn btn-light btn-sm text-danger' ${disabledAttr} onclick='eliminar(${item.MedicoID})'><i class='bi bi-person-x'></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+            }
+            $("#tablaMedicos tbody").html(html);
         }
 
         // FUNCIÓN PARA LLENAR LOS SELECT
@@ -456,6 +484,8 @@
 
         // FUNCIÓN PARA GUARDAR INFORMACIÓN (AGREGAR/MODIFICAR)
         function guardar() {
+            var numero = $("#txtNumeroLicencia").val();
+
             var request = {
                 MedicoID: parseInt($("#txtIdMedico").val()),
                 UsuarioID: $("#cboUsuario").val(),
@@ -466,16 +496,43 @@
                 HoraSalida: $("#txtHoraSalida").val(),
                 Activo: $("#chkActivo").prop("checked")
             };
+
             $.ajax({
                 url: '@Url.Action("Guardar", "Medicos")',
                 type: "POST",
                 data: JSON.stringify(request),
                 contentType: "application/json; charset=utf-8",
                 success: function (response) {
+
                     if (response.success) {
-                        $('#modalMedico').modal('hide');
-                        cargarDatos();
-                    } else { alert(response.mensaje); }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Guardado',
+                            text: 'El médico se guardó correctamente',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            $('#modalMedico').modal('hide');
+                            vistaActual === "HISTORIAL" ? cargarDatosHistorial() : cargarDatos();
+                        });
+
+                    } else {
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.mensaje,
+                            confirmButtonText: 'Entendido'
+                        });
+
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error inesperado',
+                        text: 'No se pudo completar la operación'
+                    });
                 }
             });
         }
@@ -489,7 +546,7 @@
                     $("#EliminarApellido").text(m.MedicoApellido);
                     $("#EliminarEspecialidad").text(m.MedicoEspecialidad);
                     $("#EliminarId").text(m.MedicoID);
-                    $("#hiddenIdEliminar").val(m.MedicoID);
+                    $("#hiddenIdEliminar").val(m.UsuarioID); //Id para activo = false en tabla usuarios
                     $("#modalEliminar").modal("show");
                 }
             });

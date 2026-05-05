@@ -268,6 +268,37 @@
 
         $(document).ready(function () {
             cargarDatos();
+
+            // FORMATO EN TIEMPO REAL
+            //TELÉFONO
+            $("#txtTelefono").on("input", function () {
+                let valor = $(this).val().replace(/\D/g, "");
+
+                if (valor.length > 8) {
+                    valor = valor.substring(0, 8);
+                }
+
+                if (valor.length > 4) {
+                    valor = valor.substring(0, 4) + "-" + valor.substring(4);
+                }
+
+                $(this).val(valor);
+            });
+
+            //DUI
+            $("#txtDui").on("input", function () {
+                let valor = $(this).val().replace(/\D/g, "");
+
+                if (valor.length > 9) {
+                    valor = valor.substring(0, 9);
+                }
+
+                if (valor.length > 8) {
+                    valor = valor.substring(0, 8) + "-" + valor.substring(8);
+                }
+
+                $(this).val(valor);
+            });
         });
 
         //Variable global de estados
@@ -304,6 +335,28 @@
         // Función para mostrar texto según valor de sexo
         function formatearSexo(sexoJson) {
             return sexoJson === "M" ? "Masculino" : "Femenino";
+        }
+
+        // FORMATO TELÉFONO 0000-0000
+        function formatearTelefono(numero) {
+            numero = numero.replace(/\D/g, "");
+
+            if (numero.length === 8) {
+                return numero.substring(0, 4) + "-" + numero.substring(4);
+            }
+
+            return numero;
+        }
+
+        // FORMATO DUI 00000000-0
+        function formatearDui(dui) {
+            dui = dui.replace(/\D/g, "");
+
+            if (dui.length === 9) {
+                return dui.substring(0, 8) + "-" + dui.substring(8);
+            }
+
+            return dui;
         }
 
         // 1. FUNCION PARA LISTAR ACTIVOS
@@ -484,6 +537,30 @@
 
         // FUNCION PARA GUARDAR (CREAR/MODIFICAR)
         function guardar() {
+            //  FORMATEAR ANTES DE ENVIAR
+            var telefono = formatearTelefono($("#txtTelefono").val());
+            var dui = formatearDui($("#txtDui").val());
+
+            //  VALIDACIÓN TELÉFONO
+            if (telefono.length !== 9) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Teléfono inválido',
+                    text: 'Debe tener formato 1111-1111'
+                });
+                return;
+            }
+
+            //DUI
+            if (dui.length !== 10) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'DUI inválido',
+                    text: 'Debe tener formato 00000000-0'
+                });
+                return;
+            }
+
             var request = {
                 PacienteID: $("#txtIdPaciente").val(),
                 Nombres: $("#txtNombre").val(),
@@ -491,7 +568,7 @@
                 DUI: $("#txtDui").val(),
                 FechaNacimiento: $("#txtFechaNac").val(),
                 Sexo: $("#txtSexo").val(),
-                Telefono: $("#txtTelefono").val(),
+                Telefono: telefono,
                 Email: $("#txtEmail").val(),
                 Direccion: $("#txtDireccion").val(),
                 TipoSangre: $("#txtTipoSangre").val(),
@@ -506,12 +583,36 @@
                 data: JSON.stringify(request),
                 contentType: "application/json; charset=utf-8",
                 success: function (response) {
+
                     if (response.success) {
-                        $('#modalPaciente').modal('hide');
-                        vistaActual === "HISTORIAL" ? cargarDatosHistorial() : cargarDatos();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Guardado',
+                            text: 'El paciente se guardó correctamente',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            $('#modalPaciente').modal('hide');
+                            vistaActual === "HISTORIAL" ? cargarDatosHistorial() : cargarDatos();
+                        });
+
                     } else {
-                        alert("Error: " + response.message);
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.mensaje,
+                            confirmButtonText: 'Entendido'
+                        });
+
                     }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error inesperado',
+                        text: 'No se pudo completar la operación'
+                    });
                 }
             });
         }

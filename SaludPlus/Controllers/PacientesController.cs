@@ -109,6 +109,16 @@ namespace SaludPlus.Controllers
         {
             try
             {
+                // Validar que DUI sea único
+                bool existe = db.Pacientes.Any(P =>
+                    P.DUI == obj.DUI
+                    && P.PacienteID != obj.PacienteID); // importante para UPDATE
+
+                if (existe)
+                {
+                    return Json(new { success = false, mensaje = "El número de DUI ya está registrado." });
+                }
+
                 if (obj.PacienteID == 0)
                 {
                     obj.FechaRegistro = DateTime.Now;

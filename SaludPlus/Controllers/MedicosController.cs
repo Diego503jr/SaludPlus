@@ -21,7 +21,39 @@ namespace SaludPlus.Controllers
         public JsonResult Listar()
         {
             var medicos = db.Medicos
-                .Where(m => m.Usuarios.Activo == true)
+                .Where(m => m.Usuarios.Activo == true && m.Usuarios.RolID == 2)
+                .OrderBy(m => m.Especialidades.Nombre) //Ordenar por especialidad
+                .Select(m => new
+                {
+                    //Tabla Médicos
+                    m.MedicoID,
+                    m.NumeroLicencia,
+                    m.Consultorio,
+                    m.HoraEntrada,
+                    m.HoraSalida,
+                    m.Activo,
+                    m.UsuarioID,
+                    m.EspecialidadID,
+
+                    //Tabla Usuarios
+                    MedicoNombre = m.Usuarios.Nombres,
+                    MedicoApellido = m.Usuarios.Apellidos,
+                    MedicoEmail = m.Usuarios.Email,
+                    MedicoTelefono = m.Usuarios.Telefono,
+
+                    //Tabla Especialidades
+                    MedicoEspecialidad = m.Especialidades.Nombre
+
+                }).ToList();
+
+            return Json(medicos, JsonRequestBehavior.AllowGet);
+        }
+
+        // LISTAR MEDICOS INACTIVOS
+        public JsonResult ListarHistorial()
+        {
+            var medicos = db.Medicos
+                .Where(m => m.Usuarios.Activo == false && m.Usuarios.RolID == 2)
                 .OrderBy(m => m.Especialidades.Nombre) //Ordenar por especialidad
                 .Select(m => new
                 {
@@ -90,6 +122,32 @@ namespace SaludPlus.Controllers
         {
             try
             {
+                // Validar que NumeroLicencia sea único
+                bool existeLicencia = db.Medicos.Any(m =>
+                    m.NumeroLicencia == med.NumeroLicencia
+                    && m.MedicoID != med.MedicoID);
+
+                if (existeLicencia)
+                {
+                    return Json(new { success = false, mensaje = "El número de licencia ya está registrado." });
+                }
+
+                // Validar que el consultorio no esté ocupado en ese horario
+                bool consultorioOcupado = db.Medicos.Any(m =>
+                    m.Consultorio == med.Consultorio                
+                    && m.MedicoID != med.MedicoID                   
+                    && med.HoraEntrada < m.HoraSalida               
+                    && med.HoraSalida > m.HoraEntrada);             
+
+                if (consultorioOcupado)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        mensaje = $"El consultorio ya está ocupado en el rango de horario seleccionado."
+                    });
+                }
+
                 if (med.MedicoID == 0)
                 {
                     db.Medicos.Add(med);
@@ -98,7 +156,6 @@ namespace SaludPlus.Controllers
                 {
                     var data = db.Medicos.Find(med.MedicoID);
 
-                    
                     data.NumeroLicencia = med.NumeroLicencia;
                     data.Consultorio = med.Consultorio;
                     data.HoraEntrada = med.HoraEntrada;
