@@ -48,6 +48,46 @@
         </div>
     </div>
 
+    <footer class="bg-white border-top mt-auto" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;">
+        <div class="bg-light">
+            <div class="container-fluid px-4 py-3">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-8 col-lg-9">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3 d-none d-sm-flex">
+                                <i class="bi bi-phone text-primary fs-3"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold text-primary">
+                                    <i class="bi bi-android2 me-1 d-sm-none"></i>
+                                    ¡Lleva Salud Plus en tu móvil!
+                                </h6>
+                                <p class="mb-0 text-muted small">
+                                    Descarga nuestra aplicación para Android y accede desde cualquier lugar.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-lg-3 text-md-end">
+                        <a href="@Url.Content("~/Content/downloads/SaludPlus.apk")"
+                           download="SaludPlus.apk"
+                           class="btn btn-primary fw-bold"
+                           onclick="MostrarDescarga()">
+                            <i class="bi bi-download me-2"></i>Descargar APK
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copyright  -->
+        <div class="container-fluid px-4 py-2 border-top">
+            <div class="text-center text-muted small">
+                Copyright &copy; Salud Plus @DateTime.Now.Year
+            </div>
+        </div>
+    </footer>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>

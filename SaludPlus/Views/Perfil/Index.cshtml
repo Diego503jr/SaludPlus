@@ -1,0 +1,104 @@
+﻿@using SaludPlus.Models
+@{
+    ViewBag.Title = "Mi Perfil";
+    var u = (Usuarios)Session["User"];
+}
+
+<div class="container py-4">
+    @if (u != null)
+    {
+        <div class="row g-4 justify-content-center">
+
+            <!-- COLUMNA IZQUIERDA: Tarjeta de Perfil (Azul) -->
+            <div class="col-md-5 col-lg-4">
+                <div class="card login-card shadow-sm border-0 h-100" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white;">
+                    <div class="card-body text-center p-4 d-flex flex-column justify-content-center">
+                        <div class="mb-3">
+                            <i class="bi bi-person-circle" style="font-size: 7rem; opacity: 0.95;"></i>
+                        </div>
+                        <h3 class="fw-bold mb-1">@u.Nombres @u.Apellidos</h3>
+                        <p class="mb-4 opacity-75">
+                            <i class="bi bi-envelope-fill me-1"></i>
+                            @u.Email
+                        </p>
+
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3 mb-3">
+                            <small class="text-uppercase opacity-75 d-block mb-1">
+                                <i class="bi bi-shield-lock me-1"></i>Rol asignado
+                            </small>
+                            <h5 class="mb-0 fw-bold">@(u.Roles?.Nombre ?? "Sin Rol")</h5>
+                        </div>
+
+                        <div class="mt-auto pt-3">
+                            <span class="badge bg-light text-primary px-3 py-2">
+                                <i class="bi bi-check-circle-fill me-1"></i>Cuenta Activa
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: Información Personal -->
+            <div class="col-md-7 col-lg-6">
+                <div class="card login-card shadow-sm border-0 h-100">
+                    <div class="card-body p-4">
+                        <h5 class="text-primary mb-1 fw-bold">
+                            <i class="bi bi-person-vcard me-2"></i>Información Personal
+                        </h5>
+                        <p class="text-muted small mb-4">Datos asociados a tu cuenta</p>
+                        <hr />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">
+                                <i class="bi bi-person me-1"></i>Nombres
+                            </label>
+                            <input type="text" class="form-control bg-light" value="@u.Nombres" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">
+                                <i class="bi bi-person me-1"></i>Apellidos
+                            </label>
+                            <input type="text" class="form-control bg-light" value="@u.Apellidos" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">
+                                <i class="bi bi-envelope me-1"></i>Correo Electrónico
+                            </label>
+                            <input type="email" class="form-control bg-light" value="@u.Email" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary small text-uppercase">
+                                <i class="bi bi-shield-check me-1"></i>Rol
+                            </label>
+                            <input type="text" class="form-control bg-light" value="@(u.Roles?.Nombre ?? "Sin Rol")" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    }
+    else
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card login-card p-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="alert alert-warning text-center" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            No hay una sesión activa. Por favor, inicia sesión.
+                        </div>
+                        <div class="d-grid">
+                            <a href="@Url.Action("Index", "Login")" class="btn btn-primary">
+                                Ir al Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

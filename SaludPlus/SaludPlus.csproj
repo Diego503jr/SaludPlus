@@ -146,6 +146,7 @@
     <Compile Include="Controllers\MedicamentosController.cs" />
     <Compile Include="Controllers\MedicosController.cs" />
     <Compile Include="Controllers\PacientesController.cs" />
+    <Compile Include="Controllers\PerfilController.cs" />
     <Compile Include="Controllers\RecetasController.cs" />
     <Compile Include="Controllers\ReportesController.cs" />
     <Compile Include="Controllers\UsuariosController.cs" />
@@ -319,7 +320,6 @@
     <Content Include="Views\Recetas\Index.cshtml" />
     <Content Include="Views\Usuarios\Index.cshtml" />
     <Content Include="Views\Especialidades\Index.cshtml" />
-    <Content Include="Views\Reportes\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

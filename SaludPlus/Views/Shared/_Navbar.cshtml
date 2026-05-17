@@ -28,7 +28,10 @@
             </a>
 
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-                <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i>Perfil</a></li>
+                @if (u.Roles?.Nombre != "Administrador")
+                {
+                    <li><a class="dropdown-item py-2" href="@Url.Action("Index","Perfil")"><i class="bi bi-person me-2"></i>Perfil</a></li>
+                }
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <a class="dropdown-item py-2 text-danger fw-bold" href="@Url.Action("Logout", "Login")">
