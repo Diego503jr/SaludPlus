@@ -29,7 +29,8 @@ namespace SaludPlus.Controllers
             int pacienteIdActual = 0;
 
             ViewBag.EsSoloLectura = (consultaId.HasValue && consultaId.Value > 0);
-            // 1. Si estamos abriendo una consulta que ya existe
+
+            //Si estamos abriendo una consulta que ya existe
             if (ViewBag.EsSoloLectura)
             {
                 var consulta = db.Consultas.Include(c => c.Pacientes).FirstOrDefault(c => c.ConsultaID == consultaId);
@@ -177,10 +178,10 @@ namespace SaludPlus.Controllers
                                 {
                                     RecetaID = nuevaReceta.RecetaID,
                                     MedicamentoID = item.MedicamentoID,
-                                    Dosis = item.Dosis,
-                                    Cantidad = item.Cantidad,
-                                    Indicaciones = item.Indicaciones,
-                                    Estado = false 
+                                    Dosis = string.IsNullOrWhiteSpace(item.Dosis) ? "-" : item.Dosis,
+                                    Cantidad = item.Cantidad < 1 ? 1 : item.Cantidad,
+                                    Indicaciones = string.IsNullOrWhiteSpace(item.Indicaciones) ? "Tomar según indicaciones." : item.Indicaciones,
+                                    Estado = false
                                 };
                                 db.DetalleReceta.Add(detalle);
 
@@ -231,6 +232,19 @@ namespace SaludPlus.Controllers
 
                     transaction.Commit();
                     return Json(new { success = true });
+                }
+                catch (System.Data.Entity.Validation.DbEntityValidationException dbEx)
+                {
+                    transaction.Rollback();
+                    string erroresDetallados = "";
+                    foreach (var validationErrors in dbEx.EntityValidationErrors)
+                    {
+                        foreach (var validationError in validationErrors.ValidationErrors)
+                        {
+                            erroresDetallados += $"Campo: {validationError.PropertyName} - Error: {validationError.ErrorMessage} || ";
+                        }
+                    }
+                    return Json(new { success = false, mensaje = "Error de validación interna: " + erroresDetallados });
                 }
                 catch (Exception ex)
                 {

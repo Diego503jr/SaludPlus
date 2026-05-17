@@ -15,10 +15,11 @@
 </div>
 
 @section Scripts {
-
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/&#64;fullcalendar/core@6.1.11/locales/es.global.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendarioMedico');
@@ -35,12 +36,52 @@
                     right: 'dayGridMonth,timeGridWeek,timeGridDay' // Botones para ver por Mes, Semana o Día
                 },
 
-                // Le decimos de dónde sacar los datos
                 events: '@Url.Action("ObtenerEventosCalendario", "Citas")',
 
-                // Qué hacer cuando el médico le da clic a una cita en el calendario
+                // --- ACTUALIZADO CON SWEETALERT2 ---
                 eventClick: function(info) {
-                    alert('Paciente: ' + info.event.title + '\nFecha y Hora: ' + info.event.start.toLocaleString());
+                    if (info.jsEvent) {
+                        info.jsEvent.preventDefault();
+                    }
+
+                    let paciente = info.event.title;
+                    let fechaInicio = info.event.start;
+
+                    // Formateamos la fecha de forma legible (DD/MM/YYYY)
+                    let fechaFormateada = ("0" + fechaInicio.getDate()).slice(-2) + "/" +
+                                          ("0" + (fechaInicio.getMonth() + 1)).slice(-2) + "/" +
+                                          fechaInicio.getFullYear();
+
+                    // Formateamos la hora en formato 24h legible (HH:MM)
+                    let horaFormateada = ("0" + fechaInicio.getHours()).slice(-2) + ":" +
+                                         ("0" + fechaInicio.getMinutes()).slice(-2);
+
+                    // Capturamos el motivo del extendedProps por si tu JSON lo incluye en el backend
+                    let motivo = (info.event.extendedProps && info.event.extendedProps.motivo)
+                                 ? info.event.extendedProps.motivo
+                                 : "Cita de Control / Seguimiento Clínico";
+
+                    // Lanzamos la tarjeta de información moderna de SweetAlert2
+                    Swal.fire({
+                        title: '<span class="text-primary fw-bold fs-4">Detalle de la Cita</span>',
+                        html: `
+                            <div class="text-start p-2 small" style="font-size: 14px;">
+                                <p class="mb-2"><i class="fas fa-user text-muted me-2" style="width: 20px;"></i><strong>Paciente:</strong> <span class="text-dark fw-bold">${paciente}</span></p>
+                                <p class="mb-2"><i class="fas fa-calendar-day text-muted me-2" style="width: 20px;"></i><strong>Fecha:</strong> ${fechaFormateada}</p>
+                                <p class="mb-2"><i class="fas fa-clock text-muted me-2" style="width: 20px;"></i><strong>Hora programada:</strong> ${horaFormateada} hrs</p>
+                                <div class="border-top pt-2 mt-2">
+                                    <p class="mb-1 text-muted"><i class="fas fa-notes-medical me-2" style="width: 20px;"></i><strong>Motivo de consulta:</strong></p>
+                                    <span class="text-dark d-block bg-light p-2 rounded border style="font-style: italic;">"${motivo}"</span>
+                                </div>
+                            </div>
+                        `,
+                        icon: 'info',
+                        confirmButtonColor: '#0d6efd',
+                        confirmButtonText: '<i class="fas fa-check me-1"></i> Entendido',
+                        customClass: {
+                            popup: 'rounded-4 border-0 shadow-sm'
+                        }
+                    });
                 }
             });
 

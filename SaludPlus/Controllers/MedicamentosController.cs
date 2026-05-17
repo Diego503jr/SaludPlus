@@ -15,13 +15,12 @@ namespace SaludPlus.Controllers
             var comodin = db.Medicamentos.FirstOrDefault(m => m.Nombre == "MEDICAMENTO EXTERNO (Solo texto)");
             if (comodin == null)
             {
-                // Si no existe, lo creamos usando valores válidos para evitar el CHECK Constraint de SQL
                 db.Medicamentos.Add(new Medicamentos
                 {
                     Nombre = "MEDICAMENTO EXTERNO (Solo texto)",
                     Laboratorio = "Externo",
-                    Presentacion = "Tabletas",      // <- Cambiado de "N/A" a "Tabletas"
-                    ViaAdministracion = "Oral",     // <- Cambiado de "N/A" a "Oral" para pasar la validación SQL
+                    Presentacion = "Tabletas",
+                    ViaAdministracion = "Oral",
                     StockActual = 999999,
                     StockMinimo = 0,
                     Precio = 0,
@@ -37,7 +36,9 @@ namespace SaludPlus.Controllers
         [HttpGet]
         public JsonResult Listar()
         {
+            // Agregamos el filtro para mostrar ÚNICAMENTE los registros activos en el catálogo
             var lista = db.Medicamentos
+                .Where(m => m.Activo == true)
                 .Select(m => new
                 {
                     m.MedicamentoID,
@@ -47,7 +48,7 @@ namespace SaludPlus.Controllers
                     m.ViaAdministracion,
                     m.StockActual,
                     m.StockMinimo,
-                    m.Precio
+                    m.Precio 
                 })
                 .ToList();
 
@@ -94,7 +95,6 @@ namespace SaludPlus.Controllers
                     var data = db.Medicamentos.Find(obj.MedicamentoID);
                     if (data == null) return Json(new { success = false, mensaje = "El registro no existe." });
 
-                    // Evitamos que editen el nombre del Comodín
                     if (data.Nombre != "MEDICAMENTO EXTERNO (Solo texto)")
                     {
                         data.Nombre = obj.Nombre;
@@ -106,6 +106,8 @@ namespace SaludPlus.Controllers
                     data.StockActual = obj.StockActual;
                     data.StockMinimo = obj.StockMinimo;
                     data.Precio = obj.Precio;
+
+                    db.Entry(data).State = System.Data.Entity.EntityState.Modified;
                 }
 
                 db.SaveChanges();
@@ -117,7 +119,7 @@ namespace SaludPlus.Controllers
             }
         }
 
-        // ELIMINAR (Soft Delete)
+        // ELIMINAR
         [HttpPost]
         public JsonResult Eliminar(int id)
         {
@@ -126,13 +128,14 @@ namespace SaludPlus.Controllers
                 var data = db.Medicamentos.Find(id);
                 if (data != null)
                 {
-                    // Protegemos el comodín para que no lo borren por error
                     if (data.Nombre == "MEDICAMENTO EXTERNO (Solo texto)")
                     {
                         return Json(new { success = false, mensaje = "No se puede eliminar el medicamento comodín del sistema." });
                     }
 
-                    data.Activo = false; // Eliminación lógica
+                    data.Activo = false; 
+                    db.Entry(data).State = System.Data.Entity.EntityState.Modified;
+
                     db.SaveChanges();
                     return Json(new { success = true });
                 }

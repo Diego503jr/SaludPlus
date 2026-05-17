@@ -17,21 +17,60 @@ namespace SaludPlus.Controllers
             return View();
         }
 
-        // GET: Citas/Calendario (La nueva vista visual)
+        // GET: Citas/Calendario 
         public ActionResult Calendario()
         {
             return View();
         }
 
+        // =======================================================
         // LISTAR CITAS 
+        // =======================================================
         public JsonResult Listar()
         {
-            var citas = db.Citas
-                .Select(c => new
+            try
+            {
+                var usuarioSesion = Session["User"] as Usuarios;
+                if (usuarioSesion == null)
+                {
+                    return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+                }
+
+                int usuarioId = usuarioSesion.UsuarioID;
+
+                // 2. Buscamos el rol del usuario directamente en la base de datos
+                var usuarioLogueado = db.Usuarios.Include("Roles").FirstOrDefault(u => u.UsuarioID == usuarioId);
+                if (usuarioLogueado == null || usuarioLogueado.Roles == null)
+                {
+                    return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+                }
+
+                string nombreRol = usuarioLogueado.Roles.Nombre.Trim().ToUpper();
+
+                // Inicializamos la consulta base (apunta a todas las citas)
+                var consultaCitas = db.Citas.AsQueryable();
+
+                //Si es Médico, buscamos su MedicoID mediante la relación con UsuarioID
+                if (nombreRol == "MEDICO" || nombreRol == "MÉDICO")
+                {
+                    var perfilMedico = db.Medicos.FirstOrDefault(m => m.UsuarioID == usuarioId);
+                    if (perfilMedico != null)
+                    {
+                        consultaCitas = consultaCitas.Where(c => c.MedicoID == perfilMedico.MedicoID);
+                    }
+                    else
+                    {
+                        // Si no tiene perfil médico creado, devolvemos lista vacía para evitar colgar la vista
+                        return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+                    }
+                }
+                // Si el rol es RECEPCIONISTA o ADMINISTRADOR, se ignora el bloque anterior y trae TODO de forma global.
+
+                // 4. Ejecutamos la proyección LINQ
+                var citas = consultaCitas.Select(c => new
                 {
                     c.CitaID,
                     PacienteID = c.PacienteID,
-                    // Concatenamos Nombres y Apellidos del Paciente
                     PacienteNombre = c.Pacientes.Nombres + " " + c.Pacientes.Apellidos,
                     MedicoID = c.MedicoID,
                     MedicoNombre = c.Medicos.Usuarios.Nombres + " " + c.Medicos.Usuarios.Apellidos,
@@ -42,7 +81,27 @@ namespace SaludPlus.Controllers
                     c.Observaciones
                 }).ToList();
 
-            return Json(citas, JsonRequestBehavior.AllowGet);
+                // 5. Formateamos strings para las columnas de la vista
+                var resultadoFormateado = citas.Select(c => new
+                {
+                    c.CitaID,
+                    c.PacienteID,
+                    c.PacienteNombre,
+                    c.MedicoID,
+                    c.MedicoNombre,
+                    FechaCitaStr = c.FechaCita.ToString("dd/MM/yyyy"),
+                    HoraCitaStr = c.HoraCita.ToString(@"hh\:mm"),
+                    c.Motivo,
+                    c.Estado,
+                    c.Observaciones
+                }).ToList();
+
+                return Json(resultadoFormateado, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
         }
 
         // DETALLES / Id (Para cargar el modal de edición)
@@ -81,7 +140,6 @@ namespace SaludPlus.Controllers
                     // NUEVA CITA
                     obj.FechaCreacion = DateTime.Now;
 
-                    // Si no se envía un estado desde la vista, por defecto es Pendiente
                     if (string.IsNullOrEmpty(obj.Estado))
                     {
                         obj.Estado = "Pendiente";
@@ -105,7 +163,6 @@ namespace SaludPlus.Controllers
                     data.Motivo = obj.Motivo;
                     data.Observaciones = obj.Observaciones;
 
-                    // Solo actualizamos el estado si se está modificando explícitamente
                     if (!string.IsNullOrEmpty(obj.Estado))
                     {
                         data.Estado = obj.Estado;
@@ -131,7 +188,6 @@ namespace SaludPlus.Controllers
 
                 if (data != null)
                 {
-                    // nuevoEstado puede ser "Confirmada", "Cancelada", etc.
                     data.Estado = nuevoEstado;
                     db.Entry(data).State = System.Data.Entity.EntityState.Modified;
                     db.SaveChanges();
@@ -166,40 +222,81 @@ namespace SaludPlus.Controllers
             var medicos = db.Medicos.Where(m => m.Activo == true)
                 .Select(m => new {
                     Id = m.MedicoID,
-                    // Cruzamos con la tabla Usuarios para sacar el nombre
                     Texto = m.Usuarios.Nombres + " " + m.Usuarios.Apellidos
                 }).ToList();
             return Json(medicos, JsonRequestBehavior.AllowGet);
         }
+
         // =======================================================
-        // ENDPOINT PARA LLENAR FULLCALENDAR
+        // ENDPOINT PARA FULLCALENDAR (FILTRADO INTELIGENTE POR ROL)
         // =======================================================
         [HttpGet]
         public JsonResult ObtenerEventosCalendario()
         {
-            // 1. Traemos las citas activas de la base de datos a memoria
-            var citas = db.Citas
-                .Where(c => c.Estado != "Cancelada") // Ocultamos las canceladas
-                .ToList();
-
-            // 2. Las mapeamos al formato exacto que pide FullCalendar
-            var eventos = citas.Select(c => new
+            try
             {
-                id = c.CitaID,
-                title = c.Pacientes.Nombres + " " + c.Pacientes.Apellidos,
-                start = c.FechaCita.ToString("yyyy-MM-dd") + "T" + c.HoraCita.ToString(@"hh\:mm\:ss"),
+                // 1. Usamos la misma validación de sesión de tu LoginController
+                var usuarioSesion = Session["User"] as Usuarios;
+                if (usuarioSesion == null)
+                {
+                    return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+                }
 
-                // Asignamos colores de Bootstrap dependiendo del estado
-                color = c.Estado == "Confirmada" ? "#198754" :
-                        c.Estado == "Pendiente" ? "#ffc107" :  
-                        c.Estado == "Completada" ? "#0dcaf0" : 
-                        "#6c757d",
-                textColor = c.Estado == "Pendiente" ? "#000" : "#fff",
+                int usuarioId = usuarioSesion.UsuarioID;
 
-                allDay = false
-            }).ToList();
+                var usuarioLogueado = db.Usuarios.Include("Roles").FirstOrDefault(u => u.UsuarioID == usuarioId);
+                if (usuarioLogueado == null || usuarioLogueado.Roles == null)
+                {
+                    return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+                }
 
-            return Json(eventos, JsonRequestBehavior.AllowGet);
+                string nombreRol = usuarioLogueado.Roles.Nombre.Trim().ToUpper();
+
+                // Consulta base: ocultamos siempre las canceladas para mantener limpio el calendario
+                var consultaCitas = db.Citas.Where(c => c.Estado != "Cancelada");
+
+                // Aplicamos el filtro relacional solo si corresponde a un médico
+                if (nombreRol == "MEDICO" || nombreRol == "MÉDICO")
+                {
+                    var perfilMedico = db.Medicos.FirstOrDefault(m => m.UsuarioID == usuarioId);
+                    if (perfilMedico != null)
+                    {
+                        consultaCitas = consultaCitas.Where(c => c.MedicoID == perfilMedico.MedicoID);
+                    }
+                    else
+                    {
+                        return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+                    }
+                }
+
+                var citasLista = consultaCitas.ToList();
+
+                // Mapeamos al formato exacto que pide FullCalendar incorporando extendedProps
+                var eventos = citasLista.Select(c => new
+                {
+                    id = c.CitaID,
+                    title = c.Pacientes.Nombres + " " + c.Pacientes.Apellidos,
+                    start = c.FechaCita.ToString("yyyy-MM-dd") + "T" + c.HoraCita.ToString(@"hh\:mm\:ss"),
+
+                    color = c.Estado == "Confirmada" ? "#198754" :
+                            c.Estado == "Pendiente" ? "#ffc107" :
+                            c.Estado == "Completada" ? "#0dcaf0" :
+                            "#6c757d",
+                    textColor = c.Estado == "Pendiente" ? "#000" : "#fff",
+
+                    allDay = false,
+                    extendedProps = new
+                    {
+                        motivo = c.Motivo
+                    }
+                }).ToList();
+
+                return Json(eventos, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+            }
         }
     }
 }

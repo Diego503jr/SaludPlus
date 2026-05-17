@@ -13,7 +13,6 @@
         </a>
     </div>
 
-    <!-- PORTADA DEL EXPEDIENTE MÉDICO -->
     <div class="alert border-primary bg-primary-subtle d-flex align-items-center rounded-3 shadow-sm mb-4">
         <i class="fas fa-id-card-alt fs-1 text-primary me-4"></i>
         <div class="flex-grow-1">
@@ -32,7 +31,6 @@
             <input type="hidden" id="hdnConsultaID" value="@ViewBag.ConsultaID" />
             <input type="hidden" id="hdnCitaID" value="@ViewBag.CitaID" />
 
-            <!-- PESTAÑAS -->
             <ul class="nav nav-tabs nav-justified border-bottom-0 bg-light rounded-top-4 pt-2 px-2" id="fichaTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active fw-bold text-primary" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historialPrevio" type="button" role="tab">
@@ -58,7 +56,6 @@
 
             <div class="tab-content p-4" id="fichaTabsContent">
 
-                <!-- PANEL 1: HISTORIAL PREVIO -->
                 <div class="tab-pane fade show active" id="historialPrevio" role="tabpanel">
                     <h6 class="fw-bold text-dark mb-4"><i class="fas fa-notes-medical text-primary me-2"></i>Resumen de Consultas Anteriores</h6>
 
@@ -91,7 +88,6 @@
                     }
                 </div>
 
-                <!-- PANEL 2: EVALUACIÓN CLÍNICA -->
                 <div class="tab-pane fade" id="evaluacion" role="tabpanel">
                     <div class="row g-4">
                         <div class="col-12">
@@ -111,7 +107,6 @@
                     </div>
                 </div>
 
-                <!-- PANEL 3: SIGNOS VITALES -->
                 <div class="tab-pane fade" id="signos" role="tabpanel">
                     <div class="row g-4">
                         <div class="col-md-3">
@@ -145,7 +140,6 @@
                     </div>
                 </div>
 
-                <!-- PANEL 4: RECETA Y TRATAMIENTO -->
                 <div class="tab-pane fade" id="tratamiento" role="tabpanel">
                     <h6 class="fw-bold text-success mb-3"><i class="fas fa-prescription-bottle-alt me-2"></i>Emitir Receta Médica</h6>
 
@@ -211,7 +205,6 @@
 
             </div>
 
-            <!-- BOTÓN DE GUARDADO -->
             <div class="card-footer bg-white border-top p-4 text-end">
                 <button type="button" class="btn btn-success fw-bold px-4 shadow-sm" onclick="guardarFicha()">
                     <i class="fas fa-save me-2"></i>Guardar y Finalizar Consulta
@@ -224,26 +217,27 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        var listaReceta = []; 
+        var listaReceta = []; // Memoria temporal de la receta
 
         $(document).ready(function () {
             cargarCatalogoMedicamentos();
 
-            // Verificamos si estamos abriendo un expediente existente para cargar sus datos
             let consultaId = parseInt($("#hdnConsultaID").val()) || 0;
             if (consultaId > 0) {
                 cargarDatosConsulta(consultaId);
             }
 
-            //APLICAMOS EL BLOQUEO SI ES HISTORIAL VIEJO
             let esSoloLectura = '@ViewBag.EsSoloLectura' === 'True';
             if (esSoloLectura) {
                 aplicarModoLectura();
             }
         });
 
+        // ----------------------------------------------------
         // FUNCIONES DE CARGA Y LECTURA
+        // ----------------------------------------------------
         function cargarCatalogoMedicamentos() {
             $.get('@Url.Action("Listar", "Medicamentos")', function (data) {
                 let html = '<option value="">-- Seleccione (Use "Medicamento Externo" si no está) --</option>';
@@ -259,21 +253,17 @@
                 if (res.success) {
                     let d = res.data;
 
-                    // Llenamos las cajitas de Evaluación
                     $("#txtMotivo").val(d.MotivoConsulta);
                     $("#txtExamenFisico").val(d.ExamenFisico);
                     $("#txtDiagnostico").val(d.Diagnostico);
 
-                    // Llenamos Signos Vitales
                     $("#txtPeso").val(d.PesoKg);
                     $("#txtTalla").val(d.TallaCm);
                     $("#txtPresion").val(d.PresionArterial);
                     $("#txtTemp").val(d.Temperatura);
 
-                    // Llenamos Indicaciones Generales
                     $("#txtIndicacionesGenerales").val(d.Indicaciones);
 
-                    // Formateamos y llenamos la fecha de Próxima Revisión
                     if (d.ProximaRevision) {
                         let ms = parseInt(d.ProximaRevision.replace("/Date(", "").replace(")/", ""));
                         let fecha = new Date(ms);
@@ -286,25 +276,19 @@
         }
 
         function aplicarModoLectura() {
-            // Deshabilitamos todos los inputs y textareas de Evaluación y Signos Vitales
             $("#evaluacion input, #evaluacion textarea").prop("disabled", true);
             $("#signos input, #signos textarea").prop("disabled", true);
-
-            //Ocultamos todo el panel de emitir nueva receta (el carrito)
             $("#tratamiento .bg-success-subtle").hide();
-
-            //Ocultamos las columnas de "Acción" (Eliminar) en la tabla de medicinas
             $("#tablaReceta thead th:last-child").hide();
-
-            // Deshabilitamos Indicaciones generales
             $("#txtIndicacionesGenerales").prop("disabled", true);
             $("#txtProximaRevision").prop("disabled", true);
             $(".card-footer").hide();
             $("h4.fw-bold").html('<i class="fas fa-history text-secondary me-2"></i>Historial de Expediente (Solo Lectura)');
         }
 
-        // FUNCIONES DE RECETA (CARRITO)
-
+        // ----------------------------------------------------
+        // FUNCIONES DE RECETA (CARRITO) CON SWEETALERT2
+        // ----------------------------------------------------
         function agregarMedicamento() {
             let medId = $("#cboMedicamento").val();
             let nombre = $("#cboMedicamento option:selected").data("nombre");
@@ -314,28 +298,66 @@
             let indicaciones = $("#txtIndicaciones").val();
 
             if (!medId || cantidad < 1 || indicaciones.trim() === "") {
-                alert("Por favor seleccione un medicamento, defina la cantidad y escriba las indicaciones.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Faltan datos',
+                    text: 'Por favor seleccione un medicamento, defina la cantidad y escriba las indicaciones.'
+                });
                 return;
             }
 
-            // Validar Stock
             if (cantidad > stockDisponible && nombre !== "MEDICAMENTO EXTERNO (Solo texto)") {
-                alert("¡Stock insuficiente! Solo hay " + stockDisponible + " unidades disponibles.");
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Stock insuficiente!',
+                    text: `Solo hay ${stockDisponible} unidades disponibles en inventario.`
+                });
                 return;
             }
 
-            // Forzar nombre si es externo
+            // Encapsulamos el flujo de guardado en el carrito para llamarlo con seguridad
+            const procesarAgregado = () => {
+                let item = { MedicamentoID: parseInt(medId), Nombre: nombre, Dosis: dosis, Cantidad: cantidad, Indicaciones: indicaciones };
+                listaReceta.push(item);
+                dibujarTablaReceta();
+
+                $("#cboMedicamento").val('');
+                $("#txtDosis").val('');
+                $("#txtCantidad").val('1');
+                $("#txtIndicaciones").val('');
+
+
+                Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true
+                }).fire({
+                    icon: "success",
+                    title: "Agregado a la receta"
+                });
+            };
+
+
             if (nombre === "MEDICAMENTO EXTERNO (Solo texto)" && !indicaciones.toLowerCase().includes("tomar")) {
-                let conf = confirm("Seleccionó 'Medicamento Externo'. ¿Asegúrese de haber escrito el nombre de la medicina dentro de las indicaciones?");
-                if(!conf) return;
+                Swal.fire({
+                    title: 'Medicamento Externo',
+                    text: "¿Te aseguraste de haber escrito el nombre de la medicina dentro de las indicaciones?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, lo escribí',
+                    cancelButtonText: 'Revisar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        procesarAgregado();
+                    }
+                });
+            } else {
+                procesarAgregado();
             }
-
-            let item = { MedicamentoID: parseInt(medId), Nombre: nombre, Dosis: dosis, Cantidad: cantidad, Indicaciones: indicaciones };
-            listaReceta.push(item);
-            dibujarTablaReceta();
-
-            // Limpiar inputs
-            $("#cboMedicamento").val(''); $("#txtDosis").val(''); $("#txtCantidad").val('1'); $("#txtIndicaciones").val('');
         }
 
         function eliminarMedicamento(index) {
@@ -363,11 +385,11 @@
             $("#tablaReceta tbody").html(html);
         }
 
+       // ----------------------------------------------------
+        // GUARDADO FINAL TRANSACCIONAL CON VALIDACIÓN DE RECETA VACÍA
         // ----------------------------------------------------
-        // GUARDADO FINAL TRANSACCIONAL
-        // ----------------------------------------------------
-function guardarFicha() {
-            // Validaciones
+        function guardarFicha() {
+            // 1. Validaciones básicas obligatorias de UI
             let esValido = true;
             if(!$("#txtMotivo").val().trim()) {
                 $("#txtMotivo").addClass("is-invalid"); $("#errMotivo").removeClass("d-none"); esValido = false;
@@ -376,7 +398,6 @@ function guardarFicha() {
                 $("#txtDiagnostico").addClass("is-invalid"); $("#errDiagnostico").removeClass("d-none"); esValido = false;
             }
             if(!esValido) {
-                // Alerta bonita de validación
                 Swal.fire({
                     icon: 'warning',
                     title: 'Faltan Datos',
@@ -386,54 +407,77 @@ function guardarFicha() {
                 return;
             }
 
-            // Construir Objeto Consulta
-            var requestConsulta = {
-                ConsultaID: $("#hdnConsultaID").val() ? parseInt($("#hdnConsultaID").val()) : 0,
-                CitaID: $("#hdnCitaID").val() ? parseInt($("#hdnCitaID").val()) : null,
-                PesoKg: parseFloat($("#txtPeso").val()) || null,
-                TallaCm: parseFloat($("#txtTalla").val()) || null,
-                PresionArterial: $("#txtPresion").val(),
-                Temperatura: parseFloat($("#txtTemp").val()) || null,
-                MotivoConsulta: $("#txtMotivo").val(),
-                ExamenFisico: $("#txtExamenFisico").val(),
-                Diagnostico: $("#txtDiagnostico").val(),
-                Tratamiento: listaReceta.length > 0 ? "Ver receta médica adjunta." : "Sin tratamiento farmacológico.",
-                Indicaciones: $("#txtIndicacionesGenerales").val() || "",
-                ProximaRevision: $("#txtProximaRevision").val() || null
-            };
+            // 2. Definimos la función que envía los datos reales mediante AJAX hacia C#
+            const enviarDatosServidor = () => {
+                var requestConsulta = {
+                    ConsultaID: $("#hdnConsultaID").val() ? parseInt($("#hdnConsultaID").val()) : 0,
+                    CitaID: $("#hdnCitaID").val() ? parseInt($("#hdnCitaID").val()) : null,
+                    PesoKg: parseFloat($("#txtPeso").val()) || null,
+                    TallaCm: parseFloat($("#txtTalla").val()) || null,
+                    PresionArterial: $("#txtPresion").val(),
+                    Temperatura: parseFloat($("#txtTemp").val()) || null,
+                    MotivoConsulta: $("#txtMotivo").val(),
+                    ExamenFisico: $("#txtExamenFisico").val(),
+                    Diagnostico: $("#txtDiagnostico").val(),
+                    Tratamiento: listaReceta.length > 0 ? "Ver receta médica adjunta." : "Sin tratamiento farmacológico.",
+                    Indicaciones: $("#txtIndicacionesGenerales").val() || "",
+                    ProximaRevision: $("#txtProximaRevision").val() || null
+                };
 
-            var payload = {
-                ConsultaData: requestConsulta,
-                ListaReceta: listaReceta
-            };
+                var payload = {
+                    ConsultaData: requestConsulta,
+                    ListaReceta: listaReceta
+                };
 
-            // Enviar a C#
-            $.ajax({
-                url: '@Url.Action("Guardar", "Consultas")',
-                type: "POST",
-                data: JSON.stringify(payload),
-                contentType: "application/json; charset=utf-8",
-                success: function (response) {
-                    if (response.success) {
-                        // Alerta bonita de Éxito
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Guardado!',
-                            text: '¡Expediente guardado y Receta enviada a Farmacia con éxito!',
-                            confirmButtonColor: '#198754'
-                        }).then((result) => {
-                            // Cuando el doctor le da "OK", lo regresamos al panel
-                            window.location.href = '/Consultas/Index';
-                        });
-                    } else {
-                        // Alerta bonita de Error
-                        Swal.fire('Error', response.mensaje, 'error');
+                $.ajax({
+                    url: '@Url.Action("Guardar", "Consultas")',
+                    type: "POST",
+                    data: JSON.stringify(payload),
+                    contentType: "application/json; charset=utf-8",
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Guardado!',
+                                text: '¡Expediente guardado con éxito!',
+                                confirmButtonColor: '#198754'
+                            }).then((result) => {
+                                window.location.href = '/Consultas/Index';
+                            });
+                        } else {
+                            Swal.fire('Error', response.mensaje, 'error');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire('Error Crítico', 'Fallo de comunicación con el servidor.', 'error');
                     }
-                },
-                error: function(xhr, status, error) {
-                    Swal.fire('Error Crítico', 'Fallo de comunicación con el servidor.', 'error');
-                }
-            });
+                });
+            };
+
+            // 3. Si la lista de recetas viene vacía, preguntamos antes de guardar
+            if (listaReceta.length === 0) {
+                Swal.fire({
+                    title: '¿Consulta sin Medicamentos?',
+                    text: "No has agregado ningún medicamento a la receta de esta consulta. ¿Deseas finalizar el expediente de todas formas?",
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, finalizar consulta',
+                    cancelButtonText: 'Agregar medicamentos'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Si el doctor confirma que no lleva medicinas, procedemos con el guardado
+                        enviarDatosServidor();
+                    } else {
+                        // Si cancela, lo llevamos automáticamente a la pestaña de recetas para que no se pierda
+                        new bootstrap.Tab(document.querySelector('#tratamiento-tab')).show();
+                    }
+                });
+            } else {
+                // Si la receta ya tiene ítems en el carrito, se guarda directo sin preguntar nada extra
+                enviarDatosServidor();
+            }
         }
     </script>
 }
