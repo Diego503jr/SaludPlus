@@ -30,13 +30,14 @@
                         <p class="card-text text-muted small">Exporta el expediente completo de un paciente específico ingresando su número de DUI.</p>
 
                         @* Cambiado a FormMethod.Post para enviar cadenas complejas de forma segura *@
-                        @using (Html.BeginForm("DescargarHistorial", "Reportes", FormMethod.Post, new { target = "_blank" }))
+                        @using (Html.BeginForm("DescargarHistorial", "Reportes", FormMethod.Post, new { id = "formHistorial" }))
                         {
                             <div class="form-group mb-3">
                                 <label class="form-label small fw-bold">Número de DUI del Paciente:</label>
                                 @* Cambiado a tipo text, con máscara de patrón nativo salvadoreño *@
                                 <input type="text"
                                        name="dui"
+                                       id="txtDui"
                                        class="form-control form-control-sm"
                                        required
                                        placeholder="00000000-0"
@@ -107,3 +108,55 @@
         }
     </div>
 </div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById('formHistorial');
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                // Detener el envío directo y evitar que se abra o recargue nada
+                e.preventDefault();
+
+                const duiValue = document.getElementById('txtDui').value;
+
+                // Petición AJAX asíncrona al controlador para verificar datos
+                $.ajax({
+                    url: '@Url.Action("ValidarHistorial", "Reportes")',
+                    type: 'POST',
+                    data: { dui: duiValue },
+                    success: function (response) {
+                        if (response.existe) {
+                            // URL real de descarga se abre en una nueva pestaña de forma segura
+                            var urlDescarga = '@Url.Action("DescargarHistorial", "Reportes")' + '?dui=' + encodeURIComponent(duiValue);
+                            window.open(urlDescarga, '_blank');
+                        } else {
+                            // No hay datos. No se genera pestaña y se muestra la alerta limpia
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Información del Sistema',
+                                text: response.mensaje,
+                                confirmButtonColor: '#28a745',
+                                confirmButtonText: 'Entendido',
+                                customClass: {
+                                    confirmButton: 'btn btn-success btn-sm'
+                                }
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Ocurrió un problema de comunicación con el servidor clínico.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                });
+            });
+        }
+    });
+</script>

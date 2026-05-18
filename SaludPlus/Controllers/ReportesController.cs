@@ -1,10 +1,11 @@
-﻿using SaludPlus.Models;
+﻿using CrystalDecisions.CrystalReports.Engine;
+using SaludPlus.Models;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Web.Mvc;
-using CrystalDecisions.CrystalReports.Engine;
 
 namespace SaludPlus.Controllers
 {
@@ -67,7 +68,7 @@ namespace SaludPlus.Controllers
         }
 
         // MÉDICO / ADMIN: Historial Médico por Paciente
-        [HttpPost]
+        [HttpGet]
         public ActionResult DescargarHistorial(string dui)
         {
             // Validar Rol desde el Servidor
@@ -88,55 +89,152 @@ namespace SaludPlus.Controllers
 
             string duiLimpio = dui.Trim();
 
-            // Realizamos la consulta cruzada extrayendo los datos desde la tabla Consultas
-            var consultasBase = db.Consultas
+            var pacienteBase = db.Pacientes
                 .AsNoTracking()
-                .Where(c => c.Pacientes != null && c.Pacientes.DUI == duiLimpio)
-                .OrderByDescending(c => c.FechaConsulta) // La consulta más reciente primero
-                .ToList();
+                .FirstOrDefault(p => p.DUI == duiLimpio);
 
-            // Si el paciente no registra consultas, validamos si existe en el sistema para dar un mensaje certero
-            if (!consultasBase.Any())
+            if (pacienteBase == null)
             {
-                var existePaciente = db.Pacientes.Any(p => p.DUI == duiLimpio);
-                if (existePaciente)
-                {
-                    TempData["Error"] = "El paciente existe, pero no registra consultas médicas en su historial.";
-                }
-                else
-                {
-                    TempData["Error"] = "No se encontró ningún paciente registrado con el número de DUI ingresado.";
-                }
+                TempData["Error"] = "No se encontró ningún paciente registrado con el número de DUI ingresado.";
                 return RedirectToAction("Index");
             }
 
-            // Proyectamos de forma segura hacia la estructura exacta esperada por tu .xsd
-            var datos = consultasBase.Select(c => new
-            {
-                PacienteID = c.PacienteID,
-                Paciente = c.Pacientes != null ? (c.Pacientes.Nombres + " " + c.Pacientes.Apellidos) : "Paciente Anónimo",
-                DUI = c.Pacientes != null ? c.Pacientes.DUI : "N/A",
-                FechaNacimiento = c.Pacientes != null ? (DateTime)c.Pacientes.FechaNacimiento : DateTime.Now,
-                Sexo = c.Pacientes != null ? c.Pacientes.Sexo : "-",
-                TipoSangre = c.Pacientes != null ? c.Pacientes.TipoSangre : "N/A",
-                Alergias = c.Pacientes != null ? (c.Pacientes.Alergias ?? "Ninguna informada") : "Ninguna informada",
-                AntecedentesMedicos = c.Pacientes != null ? (c.Pacientes.AntecedentesMedicos ?? "Sin antecedentes relevantes") : "Sin antecedentes relevantes",
-                ConsultaID = c.ConsultaID,
-                FechaConsulta = c.FechaConsulta,
-                Medico = (c.Medicos != null && c.Medicos.Usuarios != null) ? (c.Medicos.Usuarios.Nombres + " " + c.Medicos.Usuarios.Apellidos) : "Médico No Asignado",
-                Especialidad = (c.Medicos != null && c.Medicos.Especialidades != null) ? c.Medicos.Especialidades.Nombre : "General",
-                MotivoConsulta = c.MotivoConsulta ?? "Sin motivo registrado",
-                Diagnostico = c.Diagnostico ?? "Sin diagnóstico registrado",
-                Tratamiento = c.Tratamiento ?? "Sin tratamiento registrado",
-                PresionArterial = c.PresionArterial ?? "N/A",
-                PesoKg = c.PesoKg ?? 0.00m,
-                Temperatura = c.Temperatura ?? 0.0m
-            }).ToList();
+            // Extraer consultas de manera independiente para ordenarlas
+            var consultasPaciente = db.Consultas
+                .AsNoTracking()
+                .Where(c => c.PacienteID == pacienteBase.PacienteID)
+                .OrderByDescending(c => c.FechaConsulta) // La más reciente primero
+                .ToList();
 
-            return GenerarPdfReporte("rptHistorialMedico.rpt", datos);
+            // Estructuras de datos preparadas para Crystal Reports
+            System.Collections.IEnumerable datosReporte;
+            System.Collections.IEnumerable datosReceta;
+
+            if (consultasPaciente.Any())
+            {
+                // El paciente SÍ tiene consultas registradas
+                datosReporte = consultasPaciente.Select(c => new
+                {
+                    PacienteID = pacienteBase.PacienteID,
+                    Paciente = pacienteBase.Nombres + " " + pacienteBase.Apellidos,
+                    DUI = pacienteBase.DUI,
+                    FechaNacimiento = pacienteBase.FechaNacimiento,
+                    Sexo = pacienteBase.Sexo,
+                    TipoSangre = pacienteBase.TipoSangre,
+                    Alergias = pacienteBase.Alergias ?? "Ninguna informada",
+                    AntecedentesMedicos = pacienteBase.AntecedentesMedicos ?? "Sin antecedentes relevantes",
+                    ConsultaID = c.ConsultaID,
+                    FechaConsulta = c.FechaConsulta,
+                    Medico = (c.Medicos != null && c.Medicos.Usuarios != null) ? (c.Medicos.Usuarios.Nombres + " " + c.Medicos.Usuarios.Apellidos) : "Médico No Asignado",
+                    Especialidad = (c.Medicos != null && c.Medicos.Especialidades != null) ? c.Medicos.Especialidades.Nombre : "General",
+                    MotivoConsulta = c.MotivoConsulta ?? "Sin motivo registrado",
+                    Diagnostico = c.Diagnostico ?? "Sin diagnóstico registrado",
+                    Tratamiento = c.Tratamiento ?? "Sin tratamiento registrado",
+                    PresionArterial = c.PresionArterial ?? "N/A",
+                    PesoKg = c.PesoKg ?? 0.00m,
+                    Temperatura = c.Temperatura ?? 0.0m
+                }).ToList();
+
+                // Extraer las recetas vinculadas a estas consultas específicas
+                var IDsConsultas = consultasPaciente.Select(c => c.ConsultaID).ToList();
+                datosReceta = db.DetalleReceta.AsNoTracking() 
+                    .Where(dr => IDsConsultas.Contains(dr.Recetas.ConsultaID))
+                    .Select(dr => new {
+                        ConsultaID = dr.Recetas.ConsultaID,
+                        Medicamento = dr.Medicamentos.Nombre,
+                        Dosis = dr.Dosis,
+                        Indicaciones = dr.Indicaciones
+                    }).ToList();
+            }
+            else
+            {
+                // El paciente EXISTE pero NO tiene consultas (Efecto Tarjeta Médica Limpia)
+                var pacienteVacio = new[]
+                {
+            new {
+                PacienteID = pacienteBase.PacienteID,
+                Paciente = (pacienteBase.Nombres + " " + pacienteBase.Apellidos).Trim(),
+                DUI = pacienteBase.DUI,
+                FechaNacimiento = pacienteBase.FechaNacimiento,
+                Sexo = pacienteBase.Sexo ?? "-",
+                TipoSangre = pacienteBase.TipoSangre ?? "N/A",
+                Alergias = pacienteBase.Alergias ?? "Ninguna informada",
+                AntecedentesMedicos = pacienteBase.AntecedentesMedicos ?? "Sin antecedentes relevantes",
+
+                ConsultaID = -1,
+                FechaConsulta = DateTime.Now,
+
+                Medico = "No registra visitas",
+                Especialidad = "-",
+                MotivoConsulta = "HISTORIAL CLÍNICO NUEVO - Sin consultas previas.",
+                Diagnostico = "-",
+                Tratamiento = "-",
+                PresionArterial = "N/A",
+                PesoKg = 0.00m,
+                Temperatura = 0.0m
+            }
+        };
+
+                datosReporte = pacienteVacio.ToList();
+
+                // para evitar que Crystal Reports rompa por nulos en el subreporte
+                datosReceta = new[] {
+            new { ConsultaID = -1, Medicamento = "", Dosis = "", Indicaciones = "" }
+        }.Where(x => x.ConsultaID == -2).ToList(); 
+            }
+
+            return GenerarPdfHistorialConReceta("rptHistorialMedico.rpt", datosReporte, datosReceta);
         }
 
-       
+        [HttpPost]
+        public JsonResult ValidarHistorial(string dui)
+        {
+            if (string.IsNullOrEmpty(dui))
+            {
+                return Json(new { existe = false, mensaje = "El número de DUI no puede estar vacío." });
+            }
+
+            string duiLimpio = dui.Trim();
+
+            using (var db = new SaludPlussEntities1())
+            {
+                var existePaciente = db.Pacientes.Any(p => p.DUI == duiLimpio);
+
+                if (!existePaciente)
+                {
+                    return Json(new
+                    {
+                        existe = false,
+                        mensaje = "No se encontró ningún paciente registrado con el número de DUI ingresado."
+                    });
+                }
+            }
+
+            // Si el paciente existe (tenga o no consultas)
+            return Json(new { existe = true });
+        }
+
+        private ActionResult GenerarPdfHistorialConReceta(string nombreReporte, IEnumerable datosPrincipales, IEnumerable datosReceta)
+        {
+            ReportDocument rd = new ReportDocument();
+            string rutaReporte = Path.Combine(Server.MapPath("~/Reports"), nombreReporte);
+            rd.Load(rutaReporte);
+
+            // Seteamos los datos del reporte principal (Historial)
+            rd.SetDataSource(datosPrincipales);
+
+            rd.Subreports["subReceta.rpt"].SetDataSource(datosReceta);
+
+            Stream stream = rd.ExportToStream(CrystalDecisions.Shared.ExportFormatType.PortableDocFormat);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            rd.Close();
+            rd.Dispose();
+
+            return File(stream, "application/pdf");
+        }
+
+
 
         // RECEPCIONISTA / ADMIN: Citas Atendidas y Canceladas
         public ActionResult DescargarCitas(DateTime fechaInicio, DateTime fechaFin)
