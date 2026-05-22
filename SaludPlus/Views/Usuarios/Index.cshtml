@@ -412,11 +412,6 @@
                 return;
             }
 
-            if ($("#txtPassword").val().trim() === "") {
-                alert("La contraseña es requerida");
-                return;
-            }
-
             var request = {
                 UsuarioID: parseInt($("#txtIdUsuario").val()),
                 Nombres: $("#txtNombres").val(),

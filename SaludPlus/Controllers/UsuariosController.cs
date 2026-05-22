@@ -84,7 +84,11 @@ namespace SaludPlus.Controllers
                 if (usu.UsuarioID == 0)
                 {
                     // Registramos la pwd hasheada en la db y obtenemos la fecha actual de creacion
-                    if (usu.PasswordHash != null && !string.IsNullOrEmpty(usu.PasswordHash)) usu.PasswordHash = SecurityHelper.GetSHA256(usu.PasswordHash);
+                    if (usu.PasswordHash == null && string.IsNullOrEmpty(usu.PasswordHash))
+                    {
+                        throw new Exception("Contraseña Requerida");
+                    }
+                    usu.PasswordHash = SecurityHelper.GetSHA256(usu.PasswordHash);
                     usu.FechaCreacion = DateTime.Now;
                     db.Usuarios.Add(usu);
                 }
@@ -92,6 +96,7 @@ namespace SaludPlus.Controllers
                 {
                     var dt = db.Usuarios.Find(usu.UsuarioID);
 
+                    dt.RolID = usu.RolID;
                     dt.Nombres = usu.Nombres;
                     dt.Apellidos = usu.Apellidos;
                     dt.Email = usu.Email;
@@ -99,7 +104,6 @@ namespace SaludPlus.Controllers
                     if (usu.PasswordHash != null) dt.PasswordHash = SecurityHelper.GetSHA256(usu.PasswordHash);
                     dt.Telefono = usu.Telefono;
                     dt.Activo = usu.Activo;
-                    dt.FechaCreacion = DateTime.Now;
                 }
 
                 db.SaveChanges();
