@@ -81,11 +81,10 @@ namespace SaludPlus.Controllers
         {
             try
             {
-                string claveHashed = SecurityHelper.GetSHA256(usu.PasswordHash);
                 if (usu.UsuarioID == 0)
                 {
                     // Registramos la pwd hasheada en la db y obtenemos la fecha actual de creacion
-                    usu.PasswordHash = SecurityHelper.GetSHA256(usu.PasswordHash);
+                    if (usu.PasswordHash != null && !string.IsNullOrEmpty(usu.PasswordHash)) usu.PasswordHash = SecurityHelper.GetSHA256(usu.PasswordHash);
                     usu.FechaCreacion = DateTime.Now;
                     db.Usuarios.Add(usu);
                 }

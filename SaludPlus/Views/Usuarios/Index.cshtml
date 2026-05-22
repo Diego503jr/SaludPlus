@@ -10,7 +10,7 @@
         <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
             <h5 class="fw-bold mb-0 text-dark text-center text-md-start"><i class="fas fa-user-shield me-2"></i> Gestión de Usuarios</h5>
             <div class="d-flex gap-2 justify-content-center">
-                <button class="btn btn-primary btn-sm px-3" onclick="abrirModal(null)">
+                <button class="btn btn-primary btn-sm px-3" onclick="abrirModal(null, true)">
                     <i class="bi bi-person-plus-fill me-1"></i> Agregar Usuario
                 </button>
             </div>
@@ -321,7 +321,7 @@
                                 "<td><span class='badge " + badgeColor + " py-2 fw-bold d-inline-block text-center' style='font-size:0.75rem;width:80px;'>" + estadoTexto + "</span></td>" +
                                 "<td class='pe-4 text-center'>" +
                                     "<div class='btn-group shadow-sm'>" +
-                                        "<button class='btn btn-light btn-sm border-end text-primary' onclick='abrirModal(" + itemString + ")'><i class='bi bi-pencil'></i></button>" +
+                                        "<button class='btn btn-light btn-sm border-end text-primary' onclick='abrirModal(" + itemString + ", false)'><i class='bi bi-pencil'></i></button>" +
                                         "<button class='btn btn-light btn-sm border-end text-secondary' onclick='consultarDetalles(" + item.UsuarioID + ")'><i class='bi bi-eye'></i></button>" +
                                         "<button class='btn btn-light btn-sm text-danger' onclick='eliminar(" + item.UsuarioID + ")'><i class='bi bi-person-x'></i></button>" +
                                     "</div>" +
@@ -346,8 +346,16 @@
         }
 
         // ABRIR MODAL (AGREGAR / EDITAR)
-        function abrirModal(usuario) {
+        function abrirModal(usuario, isAdd) {
             const lblEstado = $("#lblEstadoTexto");
+
+            if (isAdd)
+            {
+                $("#chkActivo").prop("disabled", true);
+            } else
+            {
+                $("#chkActivo").prop("disabled", false);
+            }
 
             if (usuario == null) {
                 $("#txtIdUsuario").val(0);
@@ -387,6 +395,28 @@
 
         // GUARDAR USUARIO
         function guardar() {
+
+            // VALIDACIONES
+            if ($("#txtNombres").val().trim() === "") {
+                alert("El nombre es requerido");
+                return;
+            }
+
+            if ($("#txtApellidos").val().trim() === "") {
+                alert("Los apellidos son requeridos");
+                return;
+            }
+
+            if ($("#txtEmail").val().trim() === "") {
+                alert("El email es requerido");
+                return;
+            }
+
+            if ($("#txtPassword").val().trim() === "") {
+                alert("La contraseña es requerida");
+                return;
+            }
+
             var request = {
                 UsuarioID: parseInt($("#txtIdUsuario").val()),
                 Nombres: $("#txtNombres").val(),
