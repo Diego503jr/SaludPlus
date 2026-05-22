@@ -137,33 +137,13 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         $(document).ready(function () {
             cargarDatos();
             cargarSelects(); // Cargamos médicos y pacientes al iniciar
         });
-
-        // Formato para mostrar fecha (extraído de tu código de pacientes)
-        function formatearFecha(fechaJson) {
-            if (!fechaJson) return "";
-            var milisegundos = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
-            var fecha = new Date(milisegundos);
-            var dia = ("0" + fecha.getDate()).slice(-2);
-            var mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
-            var anio = fecha.getFullYear();
-            return dia + "/" + mes + "/" + anio;
-        }
-
-        // Formato para input type="date"
-        function formatearFechaInput(fechaJson) {
-            if (!fechaJson) return "";
-            var milisegundos = parseInt(fechaJson.replace("/Date(", "").replace(")/", ""));
-            var fecha = new Date(milisegundos);
-            var dia = ("0" + fecha.getDate()).slice(-2);
-            var mes = ("0" + (fecha.getMonth() + 1)).slice(-2);
-            var anio = fecha.getFullYear();
-            return anio + "-" + mes + "-" + dia;
-        }
 
         // Función para cargar selects con AJAX
         function cargarSelects() {
@@ -201,19 +181,16 @@
                         if(item.Estado === "Cancelada") badgeColor = "bg-danger";
                         if(item.Estado === "Completada") badgeColor = "bg-info text-dark";
 
-                        let horaStr = item.HoraCita && item.HoraCita.Hours != undefined ?
-                            ("0" + item.HoraCita.Hours).slice(-2) + ":" + ("0" + item.HoraCita.Minutes).slice(-2) :
-                            (item.HoraCita || "00:00");
+                        let horaStr = item.HoraCitaStr || "00:00";
+                        let fechaStr = item.FechaCitaStr || "---";
 
                         //Deshabilitar botones si ya finalizó ---
                         let botonesAccion = "";
                         if (item.Estado === "Completada" || item.Estado === "Cancelada") {
-                            // Botones bloqueados (grises y sin evento onclick)
                             botonesAccion =
                                 "<button class='btn btn-light btn-sm border-end text-muted' title='Cita bloqueada' disabled><i class='bi bi-pencil'></i></button>" +
                                 "<button class='btn btn-light btn-sm text-muted' title='Estado finalizado' disabled><i class='bi bi-gear'></i></button>";
                         } else {
-                            // Botones normales habilitados
                             botonesAccion =
                                 "<button class='btn btn-light btn-sm border-end text-primary' title='Editar' onclick='abrirModal(" + JSON.stringify(item).replace(/"/g, '&quot;') + ")'><i class='bi bi-pencil'></i></button>" +
                                 "<button class='btn btn-light btn-sm text-dark' title='Cambiar Estado' onclick='abrirModalEstado(" + item.CitaID + ", \"" + item.PacienteNombre + "\")'><i class='bi bi-gear'></i></button>";
@@ -221,7 +198,7 @@
 
                         html += "<tr>" +
                             "<td class='ps-4'>" +
-                                "<div class='fw-bold text-dark'>" + formatearFecha(item.FechaCita) + "</div>" +
+                                "<div class='fw-bold text-dark'>" + fechaStr + "</div>" +
                                 "<small class='text-muted'><i class='bi bi-clock'></i> " + horaStr + "</small>" +
                             "</td>" +
                             "<td><h6 class='mb-0 fw-bold' style='font-size: 0.9rem;'>" + item.PacienteNombre + "</h6></td>" +
@@ -230,7 +207,7 @@
                             "<td><span class='badge " + badgeColor + " px-3 py-2 fw-bold' style='font-size: 0.75rem;'>" + item.Estado + "</span></td>" +
                             "<td class='pe-4 text-center'>" +
                                 "<div class='btn-group shadow-sm'>" +
-                                    botonesAccion + // Insertamos los botones dinámicos aquí
+                                    botonesAccion +
                                 "</div>" +
                             "</td>" +
                             "</tr>";
@@ -257,19 +234,16 @@
                 $("#txtIdCita").val(cita.CitaID);
                 $("#cboPaciente").val(cita.PacienteID);
                 $("#cboMedico").val(cita.MedicoID);
-                $("#txtFechaCita").val(formatearFechaInput(cita.FechaCita));
 
-                // Procesar la hora para el input time
-                let horaStr = cita.HoraCita && cita.HoraCita.Hours != undefined ?
-                            ("0" + cita.HoraCita.Hours).slice(-2) + ":" + ("0" + cita.HoraCita.Minutes).slice(-2) :
-                            (cita.HoraCita || "00:00");
-
-                // Si la hora viene de .NET como string ej "14:30:00", tomamos solo "14:30"
-                if(typeof horaStr === 'string' && horaStr.length > 5){
-                    horaStr = horaStr.substring(0, 5);
+                if (cita.FechaCitaStr) {
+                    let partes = cita.FechaCitaStr.split('/');
+                    if (partes.length === 3) {
+                        let fechaInvertida = partes[2] + "-" + partes[1] + "-" + partes[0];
+                        $("#txtFechaCita").val(fechaInvertida);
+                    }
                 }
 
-                $("#txtHoraCita").val(horaStr);
+                $("#txtHoraCita").val(cita.HoraCitaStr || "00:00");
                 $("#txtMotivo").val(cita.Motivo);
                 $("#txtObservaciones").val(cita.Observaciones);
                 $("#cboEstado").val(cita.Estado);
@@ -290,9 +264,15 @@
                 Estado: $("#cboEstado").val()
             };
 
-            // Validaciones básicas
+            // Validaciones básicas con SweetAlert2
             if (!request.PacienteID || !request.MedicoID || !request.FechaCita) {
-                alert("Paciente, Médico y Fecha son obligatorios.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos Incompletos',
+                    text: 'Paciente, Médico y Fecha son obligatorios.',
+                    confirmButtonColor: '#0d6efd',
+                    confirmButtonText: 'Entendido'
+                });
                 return;
             }
 
@@ -306,8 +286,21 @@
                     if (response.success) {
                         $('#modalCita').modal('hide');
                         cargarDatos(); // Recargar tabla
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Guardado!',
+                            text: 'La cita se guardó correctamente.',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
                     } else {
-                        alert("Error: " + response.mensaje);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.mensaje,
+                            confirmButtonColor: '#dc3545'
+                        });
                     }
                 }
             });
@@ -332,8 +325,19 @@
                     $("#modalEstado").modal("hide");
                     if (response.success) {
                         cargarDatos();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Estado Actualizado',
+                            showConfirmButton: false,
+                            timer: 1000
+                        });
                     } else {
-                        alert("Error: " + response.mensaje);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.mensaje,
+                            confirmButtonColor: '#dc3545'
+                        });
                     }
                 }
             });
