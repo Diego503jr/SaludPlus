@@ -18,6 +18,12 @@ namespace SaludPlus
                 url: "{controller}/{action}/{id}",
                 defaults: new { controller = "Login", action = "Login", id = UrlParameter.Optional }
             );
+            routes.MapRoute(
+            name: "PageNotFoundCatchAll",
+            url: "{*url}",
+            defaults: new { controller = "Home", action = "PageNotFound" }
+        );
+
         }
     }
 }

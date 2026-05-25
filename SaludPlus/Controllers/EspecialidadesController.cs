@@ -1,4 +1,6 @@
-﻿using System;
+﻿using SaludPlus.Helpers;
+using SaludPlus.Models;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -6,10 +8,10 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
-using SaludPlus.Models;
 
 namespace SaludPlus.Controllers
 {
+    [CustomAuthorize(Roles = "Administrador")]
     public class EspecialidadesController : Controller
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();

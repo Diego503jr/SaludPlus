@@ -1,12 +1,11 @@
 ﻿using SaludPlus.Helpers;
 using SaludPlus.Models;
 using System;
-using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Security.Policy;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Security; 
 
 namespace SaludPlus.Controllers
 {
@@ -23,7 +22,7 @@ namespace SaludPlus.Controllers
         [HttpPost]
         public JsonResult ValidarUsuario(Usuarios usuario)
         {
-                string claveCifrada = SecurityHelper.GetSHA256(usuario.PasswordHash);
+            string claveCifrada = SecurityHelper.GetSHA256(usuario.PasswordHash);
 
             var info = db.Usuarios
                          .Include(u => u.Roles)
@@ -36,6 +35,24 @@ namespace SaludPlus.Controllers
                 db.SaveChanges();
 
                 Session["User"] = info;
+
+                string nombreRol = info.Roles != null ? info.Roles.Nombre : "SinRol";
+
+                FormsAuthenticationTicket ticket = new FormsAuthenticationTicket(
+                    1,
+                    info.Email,                            
+                    DateTime.Now,                          
+                    DateTime.Now.AddMinutes(480),          
+                    false,                                 
+                    nombreRol,                              
+                    FormsAuthentication.FormsCookiePath
+                );
+
+               
+                string encTicket = FormsAuthentication.Encrypt(ticket);
+                HttpCookie cookie = new HttpCookie(FormsAuthentication.FormsCookieName, encTicket);
+                Response.Cookies.Add(cookie);
+
                 return Json(new { success = true, url = Url.Action("Index", "Home") });
             }
 
@@ -44,6 +61,10 @@ namespace SaludPlus.Controllers
 
         public ActionResult Logout()
         {
+           
+            FormsAuthentication.SignOut();
+
+           
             Session.Clear();
             Session.Abandon();
             return RedirectToAction("Login", "Login");

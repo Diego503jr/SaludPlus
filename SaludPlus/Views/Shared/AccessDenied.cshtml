@@ -1,0 +1,18 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Acceso Denegado";
+}
+
+<div class="text-center" style="padding: 50px 15px;">
+    <div style="font-size: 72px; color: #dc3545; margin-bottom: 20px;">
+        <i class="fas fa-exclamation-triangle"></i> ¡Oops!
+    </div>
+    <h2 class="text-danger">No tienes acceso a esta página</h2>
+    <p class="lead text-muted" style="margin-bottom: 30px;">
+        Tu rol actual no cuenta con los permisos necesarios para ver esta sección.
+    </p>
+
+    <a href="@Url.Action("Index", "Home")" class="btn btn-primary btn-lg" style="padding: 10px 30px;">
+        <i class="fas fa-home"></i> Volver al Inicio
+    </a>
+</div>

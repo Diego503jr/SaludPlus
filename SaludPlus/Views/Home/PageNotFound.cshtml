@@ -1,0 +1,18 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml"; 
+    ViewBag.Title = "Página no encontrada";
+}
+
+<div class="text-center" style="padding: 60px 15px;">
+    <div style="font-size: 90px; color: #6c757d; font-weight: bold; line-height: 1;">
+        404
+    </div>
+    <h2 class="text-dark" style="margin-top: 10px;">La página que buscas no existe</h2>
+    <p class="lead text-muted" style="margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto;">
+        Es posible que hayas escrito mal la dirección o que el apartado haya sido movido de lugar temporalmente.
+    </p>
+
+    <a href="@Url.Action("Index", "Home")" class="btn btn-primary btn-lg" style="padding: 10px 30px;">
+        <i class="fas fa-arrow-left"></i> Volver a la página de inicio
+    </a>
+</div>

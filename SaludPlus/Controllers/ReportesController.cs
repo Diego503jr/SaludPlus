@@ -1,4 +1,5 @@
 ﻿using CrystalDecisions.CrystalReports.Engine;
+using SaludPlus.Helpers;
 using SaludPlus.Models;
 using System;
 using System.Collections;
@@ -9,6 +10,7 @@ using System.Web.Mvc;
 
 namespace SaludPlus.Controllers
 {
+    [CustomAuthorize(Roles = "Administrador,Recepcionista,Medico")]
     public class ReportesController : Controller
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();

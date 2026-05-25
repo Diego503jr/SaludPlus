@@ -13,6 +13,7 @@ using SaludPlus.Helpers;
 
 namespace SaludPlus.Controllers
 {
+    [CustomAuthorize(Roles = "Administrador")]
     public class UsuariosController : Controller
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();

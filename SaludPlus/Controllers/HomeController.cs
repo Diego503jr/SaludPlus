@@ -26,5 +26,23 @@ namespace SaludPlus.Controllers
 
             return View();
         }
+
+        public ActionResult AccessDenied()
+        {
+            Response.StatusCode = 403;
+
+            Response.TrySkipIisCustomErrors = true;
+
+            return View();
+        }
+
+        public ActionResult PageNotFound()
+        {
+            Response.StatusCode = 404;
+
+            Response.TrySkipIisCustomErrors = true;
+
+            return View();
+        }
     }
 }

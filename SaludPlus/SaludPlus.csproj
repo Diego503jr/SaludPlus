@@ -154,6 +154,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\CustomAuthorize.cs" />
     <Compile Include="Models\Citas.cs">
       <DependentUpon>SaludPlusModel.tt</DependentUpon>
     </Compile>
@@ -322,6 +323,8 @@
     <Content Include="Views\Especialidades\Index.cshtml" />
     <Content Include="Views\Reportes\Index.cshtml" />
     <Content Include="Views\Perfil\Index.cshtml" />
+    <Content Include="Views\Shared\AccessDenied.cshtml" />
+    <Content Include="Views\Home\PageNotFound.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -1,4 +1,5 @@
-﻿using SaludPlus.Models;
+﻿using SaludPlus.Helpers;
+using SaludPlus.Models;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -7,6 +8,7 @@ using System.Web.Mvc;
 
 namespace SaludPlus.Controllers
 {
+    [CustomAuthorize(Roles = "Medico")]
     public class ConsultasController : Controller
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();

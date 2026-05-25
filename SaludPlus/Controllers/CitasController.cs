@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Web.Mvc;
+using SaludPlus.Helpers;
 
 namespace SaludPlus.Controllers
 {
+    [CustomAuthorize(Roles = "Medico,Recepcionista")]
     public class CitasController : Controller
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();

@@ -1,10 +1,12 @@
-﻿using SaludPlus.Models;
+﻿using SaludPlus.Helpers;
+using SaludPlus.Models;
 using System;
 using System.Linq;
 using System.Web.Mvc;
 
 namespace SaludPlus.Controllers
 {
+    [CustomAuthorize(Roles = "Administrador,Recepcionista")]
     public class RecetasController : Controller
     {
         private SaludPlussEntities1 db = new SaludPlussEntities1();
