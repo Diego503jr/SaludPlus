@@ -106,7 +106,7 @@
         }
 
         $.ajax({
-            url: '@Url.Action("ValidarUsuario", "Login")',
+            url: '/api/auth/login',
             type: 'POST',
             data: JSON.stringify(usuarioModel),
             contentType: 'application/json',
@@ -117,8 +117,14 @@
                     $("#msgError").removeClass("d-none").text(response.message);
                 }
             },
-            error: function () {
-                $("#msgError").removeClass("d-none").text("Error de conexión con el servidor.");
+            error: function (xhr) {
+                if (xhr.status === 400) {
+                    $("#msgError").removeClass("d-none").text("Email y contraseña son requeridos.");
+                } else if (xhr.status === 401) {
+                    $("#msgError").removeClass("d-none").text("Datos incorrectos.");
+                } else {
+                    $("#msgError").removeClass("d-none").text("Error de conexión con el servidor.");
+                }
             }
         });
     }

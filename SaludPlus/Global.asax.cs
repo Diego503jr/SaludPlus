@@ -6,6 +6,7 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using System.Web.Security;
+using System.Web.Http;
 
 namespace SaludPlus
 {
@@ -14,6 +15,8 @@ namespace SaludPlus
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
+
+            GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
@@ -21,6 +24,13 @@ namespace SaludPlus
 
         protected void Application_PostAuthenticateRequest(Object sender, EventArgs e)
         {
+
+            if (IsWebApiRequest())
+            {
+                HttpContext.Current.SetSessionStateBehavior(
+                    System.Web.SessionState.SessionStateBehavior.Required);
+            }
+
             HttpCookie authCookie = Request.Cookies[FormsAuthentication.FormsCookieName];
             if (authCookie != null)
             {
@@ -38,6 +48,25 @@ namespace SaludPlus
 
                     Context.User = principal;
                 }
+            }
+        }
+
+        private bool IsWebApiRequest()
+        {
+            return HttpContext.Current.Request.AppRelativeCurrentExecutionFilePath
+                             .StartsWith("~/api");
+        }
+
+        protected void Application_Error(object sender, EventArgs e)
+        {
+            Exception ex = Server.GetLastError();
+            if (ex != null)
+            {
+                // Verás el error exacto en la ventana de Output de Visual Studio
+                System.Diagnostics.Debug.WriteLine("ERROR: " + ex.Message);
+                System.Diagnostics.Debug.WriteLine("STACK: " + ex.StackTrace);
+                if (ex.InnerException != null)
+                    System.Diagnostics.Debug.WriteLine("INNER: " + ex.InnerException.Message);
             }
         }
     }
