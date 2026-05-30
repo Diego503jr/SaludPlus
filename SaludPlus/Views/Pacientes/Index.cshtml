@@ -270,6 +270,10 @@
             cargarDatos();
 
             // FORMATO EN TIEMPO REAL
+
+            $("#txtFechaNac").attr("min", "1926-01-01");
+            $("#txtFechaNac").attr("max", "2026-12-31");
+
             //TELÉFONO
             $("#txtTelefono").on("input", function () {
                 let valor = $(this).val().replace(/\D/g, "");
@@ -540,6 +544,20 @@
             //  FORMATEAR ANTES DE ENVIAR
             var telefono = formatearTelefono($("#txtTelefono").val());
             var dui = formatearDui($("#txtDui").val());
+
+
+            var fechaSeleccionada = new Date($("#txtFechaNac").val());
+            var fechaMinima = new Date("1926-01-01");
+            var fechaMaxima = new Date("2026-12-31");
+
+            if (isNaN(fechaSeleccionada.getTime()) || fechaSeleccionada < fechaMinima || fechaSeleccionada > fechaMaxima) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fecha de nacimiento inválida',
+                    text: 'La fecha debe estar comprendida entre el año 1926 y 2026.'
+                });
+                return; // Detiene la ejecución para que no se envíe al servidor
+            }
 
             //  VALIDACIÓN TELÉFONO
             if (telefono.length !== 9) {

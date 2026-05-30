@@ -111,6 +111,16 @@ namespace SaludPlus.Controllers
         {
             try
             {
+
+                DateTime fechaMinima = new DateTime(1926, 1, 1);
+                DateTime fechaMaxima = new DateTime(2026, 12, 31);
+
+                if (obj.FechaNacimiento < fechaMinima || obj.FechaNacimiento > fechaMaxima)
+                {
+                    return Json(new { success = false, mensaje = "La fecha de nacimiento permitida debe ser entre 1926 y 2026." });
+                }
+
+
                 // Validar que DUI sea único
                 bool existe = db.Pacientes.Any(P =>
                     P.DUI == obj.DUI
