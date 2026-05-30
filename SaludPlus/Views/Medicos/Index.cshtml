@@ -107,11 +107,13 @@
                         </div>
 
                         @* Consultorio *@
-                        <div class="col-md-6">
-                            <div class="form-floating shadow-sm">
-                                @Html.TextBox("txtConsultorio", null, new { @class = "form-control border-0 px-3", placeholder = "Consultorio" })
-                                <label class="small text-muted"><i class="bi bi-door-open me-1"></i>Consultorio</label>
-                            </div>
+                        <div class="form-group">
+                            <label for="consultorio" class="control-label">Consultorio</label>
+
+                            @Html.DropDownList("TipoContrato",
+                                               (SelectList)ViewBag.OpcionesConsultorios,
+                                               "-- Seleccione un consultorio --",
+                                               new { @class = "form-control", @id = "cmbConsultorio" })
                         </div>
 
                         @* Horarios *@
@@ -437,7 +439,7 @@
 
                 $("#cboEspecialidad").val("");
                 $("#txtNumeroLicencia").val("");
-                $("#txtConsultorio").val("");
+                $("#cmbConsultorio").val("");
                 $("#txtHoraEntrada").val("08:00");
                 $("#txtHoraSalida").val("16:00");
 
@@ -449,7 +451,7 @@
             } else {
                 $("#txtIdMedico").val(medico.MedicoID);
                 $("#txtNumeroLicencia").val(medico.NumeroLicencia);
-                $("#txtConsultorio").val(medico.Consultorio);
+                $("#cmbConsultorio").val(medico.Consultorio);
 
                 $("#chkActivo").prop("checked", medico.Activo);
                 if (medico.Activo) {
@@ -491,7 +493,7 @@
                 UsuarioID: $("#cboUsuario").val(),
                 EspecialidadID: $("#cboEspecialidad").val(),
                 NumeroLicencia: $("#txtNumeroLicencia").val(),
-                Consultorio: $("#txtConsultorio").val(),
+                Consultorio: $("#cmbConsultorio").val(),
                 HoraEntrada: $("#txtHoraEntrada").val(),
                 HoraSalida: $("#txtHoraSalida").val(),
                 Activo: $("#chkActivo").prop("checked")

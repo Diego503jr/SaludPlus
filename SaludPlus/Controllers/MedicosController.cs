@@ -16,6 +16,23 @@ namespace SaludPlus.Controllers
         // GET: Médicos
         public ActionResult Index()
         {
+
+            // Mapeamos los datos de los consultorios
+            var opciones = new List<string>
+    {
+                "Consultorio 1",
+                "Consultorio 2",
+                "Consultorio 3",
+                "Consultorio 4",
+                "Consultorio 5",
+                "Consultorio 6",
+                "Consultorio 7",
+                "Consultorio 8",
+                "Consultorio 9",
+                "Consultorio 10"
+            };
+
+            ViewBag.OpcionesConsultorios = new SelectList(opciones);
             return View();
         }
 
@@ -247,6 +264,30 @@ namespace SaludPlus.Controllers
 
             return Json(lista, JsonRequestBehavior.AllowGet);
         }
+
+        [HttpGet]
+        public JsonResult ObtenerConsultorios()
+        {
+            // Mapeamos los datos de los consultorios
+            var opciones = new List<string>
+    {
+                "Consultorio 1",
+                "Consultorio 2",
+                "Consultorio 3",
+                "Consultorio 4",
+                "Consultorio 5",
+                "Consultorio 6",
+                "Consultorio 7",
+                "Consultorio 8",
+                "Consultorio 9",
+                "Consultorio 10"
+            };
+
+            // Devolvemos la lista limpia en formato JSON
+            return Json(opciones, JsonRequestBehavior.AllowGet);
+        }
+
+
 
     }
 }
