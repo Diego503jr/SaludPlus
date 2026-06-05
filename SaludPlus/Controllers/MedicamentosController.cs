@@ -1,6 +1,7 @@
 ﻿using SaludPlus.Helpers;
 using SaludPlus.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -146,6 +147,36 @@ namespace SaludPlus.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, mensaje = ex.Message });
+            }
+        }
+
+        // -------------------------------------------------------------
+        // MÉTODO EXCLUSIVO PARA LA FICHA CLÍNICA (Accesible para Médicos)
+        // -------------------------------------------------------------
+        [AllowAnonymous]
+        [HttpGet]
+        public JsonResult ObtenerCatalogoMedicamentos()
+        {
+            try
+            {
+                db.Configuration.ProxyCreationEnabled = false;
+
+                // Solo traemos medicamentos activos (o null) y que tengan stock disponible
+                var lista = db.Medicamentos
+                    .Where(m => (m.Activo == true || m.Activo == null) && m.StockActual > 0)
+                    .Select(m => new {
+                        MedicamentoID = m.MedicamentoID,
+                        Nombre = m.Nombre,
+                        StockActual = m.StockActual
+                    })
+                    .OrderBy(m => m.Nombre)
+                    .ToList();
+
+                return Json(lista, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception)
+            {
+                return Json(new List<object>(), JsonRequestBehavior.AllowGet);
             }
         }
     }

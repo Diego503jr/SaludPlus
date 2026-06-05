@@ -239,12 +239,25 @@
         // FUNCIONES DE CARGA Y LECTURA
         // ----------------------------------------------------
         function cargarCatalogoMedicamentos() {
-            $.get('@Url.Action("Listar", "Medicamentos")', function (data) {
-                let html = '<option value="">-- Seleccione (Use "Medicamento Externo" si no está) --</option>';
-                $.each(data, function (i, item) {
-                    html += `<option value="${item.MedicamentoID}" data-stock="${item.StockActual}" data-nombre="${item.Nombre}">${item.Nombre}</option>`;
-                });
-                $("#cboMedicamento").html(html);
+            $.ajax({
+                url: '@Url.Action("ObtenerCatalogoMedicamentos", "Medicamentos")',
+                type: 'GET',
+                success: function (data) {
+                    let html = '<option value="">-- Seleccione (Use "Medicamento Externo" si no está) --</option>';
+
+                    if (data && data.length > 0) {
+                        $.each(data, function (i, item) {
+                            html += `<option value="${item.MedicamentoID}" data-stock="${item.StockActual}" data-nombre="${item.Nombre}">${item.Nombre}</option>`;
+                        });
+                    } else {
+                        html = '<option value="">-- No hay medicamentos en stock --</option>';
+                    }
+
+                    $("#cboMedicamento").html(html);
+                },
+                error: function () {
+                    $("#cboMedicamento").html('<option value="">-- Error al cargar catálogo --</option>');
+                }
             });
         }
 
